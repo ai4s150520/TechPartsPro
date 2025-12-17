@@ -1,0 +1,15 @@
+SKU,Name,Category,Brand,MRP,GST_Percent,Discount_Percent,Stock,Description,Image_URLs
+SKU0001,Apple 12 Charging Port,Charging Port Boards,Apple,1900,5,20,140,Fast charging dock connector,https://example.com/image1.jpg
+SKU0002,Oppo 13 LCD Display,LCD & OLED Displays,Oppo,4850,12,5,147,High brightness AMOLED screen,https://example.com/image2.jpg
+SKU0003,Realme 12 Back Glass,Back Glass & Housing,Realme,1700,12,25,75,Premium back glass with camera lens,https://example.com/image3.jpg
+SKU0004,Mobile Opening Tool Set,Repair Tools & Equipment,,1850,12,25,88,Multi-purpose mobile repair kit,https://example.com/image4.jpg
+SKU0005,Realme 9 Pro Battery,Replacement Batteries,Realme,1400,12,25,54,High capacity 4000mAh battery,https://example.com/image5.jpg
+SKU0006,Nokia 9 Pro Battery,Replacement Batteries,Nokia,1350,12,0,108,Fast charging compatible battery,https://example.com/image6.jpg
+SKU0007,Precision Screwdriver Kit,Repair Tools & Equipment,,2650,5,25,118,Complete 25-piece repair toolkit,https://example.com/image7.jpg
+SKU0008,OnePlus 10R Charging Port,Charging Port Boards,OnePlus,1250,12,20,31,USB-C charging port flex cable,https://example.com/image8.jpg
+SKU0009,Xiaomi 15 Battery,Replacement Batteries,Xiaomi,2350,5,20,35,Original quality lithium battery,https://example.com/image9.jpg
+SKU0010,Samsung Nord 2 Back Glass,Back Glass & Housing,Samsung,2400,18,15,18,Original midframe with back panel,https://example.com/image10.jpg
+SKU0011,Precision Screwdriver Kit,Repair Tools & Equipment,,1600,12,20,29,Multi-purpose mobile repair kit,https://example.com/image11.jpg
+SKU0012,Google S22 Back Glass,Back Glass & Housing,Google,3000,18,0,96,Scratch-resistant glass housing,https://example.com/image12.jpg
+SKU0013,Samsung Nord 2 Charging Port,Charging Port Boards,Samsung,1650,12,5,84,Original charging PCB board,https://example.com/image13.jpg
+SKU0014,Vivo S23 LCD Display,LCD & OLED Displays,Vivo,2750,5,15,69,Original quality LCD display,https://example.com/image14.jpg
