@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Upload, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import apiClient from '../../lib/apiClient';
+import { sellerAPI } from '../../services/api';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { getImageUrl } from '../../lib/utils';
@@ -31,6 +32,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess, initialData }) => 
   const [existingImages, setExistingImages] = useState<any[]>([]); // For Edit Mode
   
   const [specs, setSpecs] = useState<{key: string, value: string}[]>([{ key: '', value: '' }]);
+  const [isProfileComplete, setIsProfileComplete] = useState<boolean>(true);
+  const [profileLoading, setProfileLoading] = useState<boolean>(false);
 
   // Calculate Selling Price for Preview
   const mrp = parseFloat(formData.price) || 0;
@@ -40,6 +43,24 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess, initialData }) => 
   // 1. Fetch Categories
   useEffect(() => {
     apiClient.get('/catalog/categories/').then(res => setCategories(res.data.results));
+  }, []);
+
+  // 2. Check seller profile completeness (prevent creating products if incomplete)
+  useEffect(() => {
+    let mounted = true;
+    setProfileLoading(true);
+    sellerAPI.getProfile()
+      .then(res => {
+        if (!mounted) return;
+        setIsProfileComplete(!!res.data.is_approved);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setIsProfileComplete(false);
+      })
+      .finally(() => mounted && setProfileLoading(false));
+
+    return () => { mounted = false };
   }, []);
 
   // 2. Pre-fill Data if Editing
@@ -107,7 +128,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess, initialData }) => 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
+    // Block create if seller profile incomplete
+    if (!initialData && !profileLoading && !isProfileComplete) {
+      setLoading(false);
+      toast.error('Please complete your seller profile (bank details / email) before adding products.');
+      return;
+    }
     try {
       const specsObject = specs.reduce((acc, curr) => {
         if (curr.key) acc[curr.key] = curr.value;
@@ -147,7 +173,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess, initialData }) => 
       onSuccess();
 
     } catch (error: any) {
-      console.error("Product Save Error:", error);
+      // Avoid leaving console.error in production code; show user-friendly toast
       toast.error(error.response?.data?.detail || "Failed to save product");
     } finally {
       setLoading(false);
@@ -156,6 +182,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess, initialData }) => 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto bg-white p-6 rounded shadow">
+      {!profileLoading && !isProfileComplete && !initialData && (
+        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800">Please complete your seller profile (bank details / email) before adding products. <a href="/seller/profile" className="underline font-medium">Complete profile</a></div>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
         <Input label="Product Name" name="name" value={formData.name} onChange={handleChange} required />
         <Input label="SKU" name="sku" value={formData.sku} onChange={handleChange} required />
@@ -238,10 +268,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess, initialData }) => 
           {/* 1. Existing Images */}
           {existingImages.map((img) => (
             <div key={img.id} className="relative w-24 h-24 border rounded overflow-hidden group">
-              <img src={getImageUrl(img.image)} alt="existing" className="w-full h-full object-cover opacity-90" />
+              <img src={getImageUrl(img.image)} alt={initialData?.name ? `${initialData.name} image` : 'product image'} className="w-full h-full object-cover opacity-90" />
               <button 
                 type="button" 
                 onClick={() => removeExistingImage(img.id)}
+                aria-label={`Remove existing image ${img.id}`}
+                title="Remove image"
                 className="absolute top-0 right-0 bg-gray-800 text-white p-1 opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <X size={12} />
@@ -252,10 +284,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess, initialData }) => 
           {/* 2. New Previews */}
           {previews.map((src, idx) => (
             <div key={idx} className="relative w-24 h-24 border rounded overflow-hidden group">
-              <img src={src} alt="preview" className="w-full h-full object-cover" />
+              <img src={src} alt={`preview ${idx + 1}`} className="w-full h-full object-cover" />
               <button 
                 type="button" 
                 onClick={() => removeImage(idx)}
+                aria-label={`Remove preview image ${idx + 1}`}
+                title="Remove image"
                 className="absolute top-0 right-0 bg-red-500 text-white p-1 opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <X size={12} />
@@ -263,9 +297,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess, initialData }) => 
             </div>
           ))}
           
-          <label className="w-24 h-24 border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center cursor-pointer hover:border-blue-500">
+          <label className="w-24 h-24 border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center cursor-pointer hover:border-blue-500" aria-hidden={false}>
             <Upload className="text-gray-400" />
-            <input type="file" multiple accept="image/*" onChange={handleImageChange} className="hidden" />
+            <span className="sr-only">Upload product images</span>
+            <input aria-label="Upload product images" type="file" multiple accept="image/*" onChange={handleImageChange} className="hidden" />
           </label>
         </div>
       </div>
@@ -282,18 +317,24 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess, initialData }) => 
           {specs.map((spec, idx) => (
             <div key={idx} className="flex gap-2">
               <input 
+                id={`spec-key-${idx}`}
+                name={`spec_key_${idx}`}
+                aria-label={`Specification key ${idx + 1}`}
                 placeholder="Key" 
                 value={spec.key} 
                 onChange={(e) => handleSpecChange(idx, 'key', e.target.value)}
                 className="w-1/3 border border-gray-300 rounded px-3 py-1 text-sm"
               />
               <input 
+                id={`spec-value-${idx}`}
+                name={`spec_value_${idx}`}
+                aria-label={`Specification value ${idx + 1}`}
                 placeholder="Value" 
                 value={spec.value} 
                 onChange={(e) => handleSpecChange(idx, 'value', e.target.value)}
                 className="w-2/3 border border-gray-300 rounded px-3 py-1 text-sm"
               />
-              <button type="button" onClick={() => removeSpecRow(idx)} className="text-red-500 p-1">
+              <button type="button" onClick={() => removeSpecRow(idx)} aria-label={`Remove specification ${idx + 1}`} className="text-red-500 p-1">
                 <X size={16} />
               </button>
             </div>
@@ -301,7 +342,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess, initialData }) => 
         </div>
       </div>
 
-      <Button type="submit" isLoading={loading} className="w-full">
+      <Button type="submit" isLoading={loading} className="w-full" disabled={!initialData && !isProfileComplete}>
         {initialData ? 'Update Product' : 'Create Product'}
       </Button>
     </form>

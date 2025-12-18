@@ -6,6 +6,7 @@ from .serializers import OrderSerializer, CreateOrderSerializer
 from .services import OrderService
 from django.core.exceptions import ValidationError
 from payments.services import PaymentService 
+from payments.models import RefundRequest
 
 class OrderListView(generics.ListAPIView):
     """ List all orders for the logged-in user """
@@ -97,6 +98,14 @@ def cancel_order(request, order_id):
                 {"error": f"Cannot cancel order with status {order.status}"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        # If any shipment is already out for delivery, disallow cancellation
+        try:
+            if order.shipments.filter(status='OUT_FOR_DELIVERY').exists():
+                return Response({"error": "Cannot cancel order after it is out for delivery"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            # If shipments relation is missing or any error occurs, be conservative and deny cancellation
+            return Response({"error": "Cannot cancel order at this time"}, status=status.HTTP_400_BAD_REQUEST)
         
         order.status = 'CANCELLED'
         order.save()
@@ -167,3 +176,95 @@ def pay_now(request, order_id):
             {"error": "Order not found"},
             status=status.HTTP_404_NOT_FOUND
         )
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def replace_order(request, order_id):
+    """Create a replacement order for a given order when allowed.
+    If original order was paid, attempt refund via PaymentService.
+    Returns the new order id and whether payment is required.
+    """
+    try:
+        order = Order.objects.get(id=order_id, user=request.user)
+
+        # Only allow replacement before out for delivery and for allowed statuses
+        if order.status not in ['PENDING', 'PROCESSING']:
+            return Response({"error": f"Cannot replace order with status {order.status}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            if order.shipments.filter(status='OUT_FOR_DELIVERY').exists():
+                return Response({"error": "Cannot replace order after it is out for delivery"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            return Response({"error": "Cannot replace order at this time"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create replacement order (will deduct stock)
+        try:
+            new_order = OrderService.clone_order_for_replace(order, request.user)
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # If original was paid, enqueue an asynchronous refund request (non-blocking)
+        if order.payment_status:
+            try:
+                rr = RefundRequest.objects.create(order=order, requested_by=request.user, status=RefundRequest.Status.PENDING)
+                # import task locally to avoid circular imports
+                from payments.tasks import refund_order_task
+                refund_order_task.delay(str(rr.id))
+            except Exception as e:
+                # Log error but do not rollback replacement; admin can retry
+                # Keep user flow uninterrupted
+                return Response({"error": f"Failed to enqueue refund: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # For CARD payments, frontend should initiate payment for the new order
+        payment_required = (new_order.payment_method == 'CARD')
+
+        return Response({
+            "message": "Replacement order created",
+            "new_order_id": new_order.id,
+            "payment_required": payment_required
+        }, status=status.HTTP_201_CREATED)
+
+    except Order.DoesNotExist:
+        return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def refund_order(request, order_id):
+    """Attempt to refund an order's payment via configured gateway.
+    Rules:
+    - Order must exist and belong to requester
+    - Order must have payment_status True
+    - Disallow if any shipment is OUT_FOR_DELIVERY
+    """
+    try:
+        order = Order.objects.get(id=order_id, user=request.user)
+
+        if not order.payment_status:
+            return Response({"error": "Order is not paid"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Disallow refund while any shipment is out for delivery
+        try:
+            if order.shipments.filter(status='OUT_FOR_DELIVERY').exists():
+                return Response({"error": "Cannot refund while order is out for delivery"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            return Response({"error": "Cannot process refund at this time"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create RefundRequest and enqueue background refund task
+        try:
+            rr = RefundRequest.objects.create(order=order, requested_by=request.user, status=RefundRequest.Status.PENDING)
+            from payments.tasks import refund_order_task
+            refund_order_task.delay(str(rr.id))
+        except Exception as e:
+            return Response({"error": f"Failed to enqueue refund: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Mark order as RETURNED for clarity (if not cancelled already)
+        if order.status not in ['CANCELLED', 'RETURNED']:
+            order.status = 'RETURNED'
+            order.save()
+
+        return Response({"message": "Refund queued"}, status=status.HTTP_202_ACCEPTED)
+
+    except Order.DoesNotExist:
+        return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)

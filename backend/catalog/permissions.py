@@ -18,4 +18,19 @@ class IsSeller(permissions.BasePermission):
     Allows access only to authenticated users with role='SELLER'.
     """
     def has_permission(self, request, view):
-        return request.user and request.user.is_authenticated and request.user.role == 'SELLER'
+        return bool(request.user and request.user.is_authenticated and request.user.role == 'SELLER')
+
+
+class IsSellerProfileComplete(permissions.BasePermission):
+    """
+    Allows access only to sellers whose seller profile is marked as approved/complete.
+    This is used to block product uploads when seller hasn't provided bank/KYC details.
+    """
+    def has_permission(self, request, view):
+        user = request.user
+        if not (user and user.is_authenticated and user.role == 'SELLER'):
+            return False
+
+        profile = getattr(user, 'seller_profile', None)
+        # If profile doesn't exist or not approved, deny
+        return bool(profile and getattr(profile, 'is_approved', False))

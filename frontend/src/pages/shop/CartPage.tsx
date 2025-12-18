@@ -30,12 +30,7 @@ const CartPage: React.FC = () => {
   const { mutate: removeFromCart } = useRemoveCartItem();
 
   // Debug logging
-  console.log('=== CART PAGE DEBUG ===');
-  console.log('Cart data:', cart);
-  console.log('Cart items:', cart?.items);
-  console.log('Items length:', cart?.items?.length);
-  console.log('Error:', error);
-  console.log('isLoading:', isLoading);
+  // Debug logs removed
 
   const handleUpdateQuantity = (itemId: number, quantity: number) => {
     if (quantity < 1) return;

@@ -53,6 +53,27 @@ class ShippingRateView(APIView):
         
         return Response(serializer.data)
 
+class CouriersListView(APIView):
+    """Return a list of supported courier partners (static or from settings)."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        # Try to read from Django settings if configured
+        from django.conf import settings
+
+        carriers = getattr(settings, 'SUPPORTED_CARRIERS', None)
+        if not carriers:
+            # Fallback static list
+            carriers = [
+                {'id': 'delhivery', 'name': 'Delhivery'},
+                {'id': 'bluedart', 'name': 'Bluedart'},
+                {'id': 'ekart', 'name': 'Ekart'},
+                {'id': 'shadowfax', 'name': 'Shadowfax'},
+                {'id': 'ecomexpress', 'name': 'Ecom Express'},
+                {'id': 'shiprocket', 'name': 'Shiprocket (auto)'}
+            ]
+
+        return Response(carriers)
 class ShipmentViewSet(viewsets.ModelViewSet):
     """
     Admin/Seller only: Create Tracking Numbers.

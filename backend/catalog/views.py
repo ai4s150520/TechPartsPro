@@ -26,7 +26,7 @@ from .serializers import (
     ProductListSerializer, ProductDetailSerializer, ProductCreateUpdateSerializer,
     CategorySerializer, BrandSerializer
 )
-from .permissions import IsSellerOrReadOnly, IsSeller
+from .permissions import IsSellerOrReadOnly, IsSeller, IsSellerProfileComplete
 
 # Setup Logger
 logger = logging.getLogger(__name__)
@@ -76,7 +76,11 @@ class ProductViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['list', 'retrieve', 'by_device']:
             return [permissions.AllowAny()]
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+        if self.action == 'create':
+            # Creating products requires seller role and a completed seller profile
+            return [permissions.IsAuthenticated(), IsSellerProfileComplete()]
+        if self.action in ['update', 'partial_update', 'destroy']:
+            # Updates/deletes require ownership checks
             return [permissions.IsAuthenticated(), IsSellerOrReadOnly()]
         return [permissions.AllowAny()]
 
@@ -123,7 +127,7 @@ class BulkUploadProductsView(APIView):
     Uses Celery for background processing
     """
     parser_classes = (MultiPartParser, FormParser)
-    permission_classes = [permissions.IsAuthenticated, IsSeller]
+    permission_classes = [permissions.IsAuthenticated, IsSellerProfileComplete]
 
     def post(self, request, *args, **kwargs):
         file_obj = request.FILES.get('file')
@@ -285,7 +289,7 @@ class BulkUploadProductsView(APIView):
 
 class BulkUploadStatusView(APIView):
     """Check bulk upload task status"""
-    permission_classes = [permissions.IsAuthenticated, IsSeller]
+    permission_classes = [permissions.IsAuthenticated, IsSellerProfileComplete]
     
     def get(self, request, task_id):
         from celery.result import AsyncResult

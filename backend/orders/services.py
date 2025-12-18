@@ -97,3 +97,49 @@ class OrderService:
                 print(f"WARNING: Email failed for Order {order.order_id}, but order was created successfully.")
 
             return order
+
+    @staticmethod
+    def clone_order_for_replace(original_order, user):
+        """Create a new order duplicating items from an existing order for replacement.
+        Ensures stock is available and deducts stock. Returns the new Order.
+        """
+        # No direct Product import needed; use item's related product
+
+        with transaction.atomic():
+            # Create a new order skeleton
+            new_order = Order.objects.create(
+                user=user,
+                total_amount=0,
+                discount_amount=original_order.discount_amount or 0,
+                coupon=original_order.coupon,
+                shipping_address=original_order.shipping_address,
+                payment_method=original_order.payment_method,
+                status=Order.Status.PENDING
+            )
+
+            total = 0
+            # Clone each item and deduct stock
+            for item in original_order.items.select_related('product').all():
+                product = item.product
+                # lock product row
+                product = product.__class__.objects.select_for_update().get(id=product.id)
+
+                if product.stock_quantity < item.quantity:
+                    raise ValidationError(f"Insufficient stock for {product.name} to replace")
+
+                OrderItem.objects.create(
+                    order=new_order,
+                    product=product,
+                    product_name=item.product_name,
+                    price=item.price,
+                    quantity=item.quantity
+                )
+
+                product.stock_quantity -= item.quantity
+                product.save()
+
+                total += (item.price * item.quantity)
+
+            new_order.total_amount = total
+            new_order.save()
+            return new_order

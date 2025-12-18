@@ -22,8 +22,7 @@ const ProductsPage: React.FC = () => {
   const products = data?.results || [];
   
   React.useEffect(() => {
-    console.log('Filters:', filters);
-    console.log('Products count:', products.length);
+    // Debug logs removed for production
   }, [filters, products]);
 
   const handleFilterChange = (newFilters: typeof filters) => {

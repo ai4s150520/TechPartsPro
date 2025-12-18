@@ -4,6 +4,7 @@ import { ChevronRight, PackageOpen, XCircle, MapPin } from 'lucide-react';
 import { toast } from 'react-toastify';
 import AccountSidebar from '../../components/layout/AccountSidebar';
 import { useOrders, useCancelOrder } from '../../hooks/useOrders';
+import { orderAPI } from '../../services/api';
 import { formatPrice, getImageUrl } from '../../lib/utils';
 import { OrderCardSkeleton } from '../../components/ui/SkeletonLoader';
 import EmptyState from '../../components/ui/EmptyState';
@@ -19,7 +20,7 @@ const OrdersPage: React.FC = () => {
   const { data, isLoading, error } = useOrders();
   const { mutate: cancelOrder, isPending: cancelling } = useCancelOrder();
   
-  console.log('Orders data:', data);
+  // Debug log removed
   const orders = Array.isArray(data) ? data : (data?.results || []);
 
   const getStatusColor = (status: string) => {
@@ -38,6 +39,20 @@ const OrdersPage: React.FC = () => {
       onSuccess: () => toast.success('Order cancelled successfully'),
       onError: (error: any) => toast.error(error.response?.data?.error || 'Failed to cancel order'),
     });
+  };
+
+  const handleReplaceOrder = async (orderId: number) => {
+    if (!confirm('Are you sure you want to create a replacement order?')) return;
+    try {
+      const resp = await orderAPI.replace(orderId);
+      toast.success('Replacement order created');
+      // Redirect to payment if required
+      if (resp.data?.payment_required) {
+        window.location.href = `/account/orders/${resp.data.new_order_id}`;
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to create replacement order');
+    }
   };
 
   return (
@@ -91,7 +106,7 @@ const OrdersPage: React.FC = () => {
                   {/* Preview Items */}
                   <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-4 gap-4">
                     <div className="flex gap-2">
-                      {(order.status === 'PENDING' || order.status === 'PROCESSING') && (
+                      {order.cancellable && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -101,6 +116,16 @@ const OrdersPage: React.FC = () => {
                         >
                           <XCircle className="w-4 h-4 mr-1" />
                           {cancelling ? 'Cancelling...' : 'Cancel Order'}
+                        </Button>
+                      )}
+                      {order.cancellable && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleReplaceOrder(order.id)}
+                          className="text-gray-700 border-gray-200 hover:bg-gray-50 ml-2"
+                        >
+                          Replace Order
                         </Button>
                       )}
                       {(order.status === 'PROCESSING' || order.status === 'SHIPPED' || order.status === 'DELIVERED') && (

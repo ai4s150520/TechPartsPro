@@ -3,6 +3,7 @@ from django.db.models import Sum, Q
 from decimal import Decimal
 from .models import Payout
 from accounts.models import SellerProfile
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 class SellerProfileSerializer(serializers.ModelSerializer):
     """ Used to show the seller their own profile status """
@@ -30,8 +31,11 @@ class SellerProfileSerializer(serializers.ModelSerializer):
         # Set bank account number (triggers property setter for encryption)
         if bank_account is not None:
             instance.bank_account_number = bank_account
-        
-        instance.save()
+        try:
+            instance.save()
+        except DjangoValidationError as e:
+            # Convert model ValidationError to serializer ValidationError for proper 400 response
+            raise serializers.ValidationError({'detail': e.messages})
         return instance
 
 class PayoutSerializer(serializers.ModelSerializer):

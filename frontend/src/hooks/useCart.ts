@@ -9,7 +9,7 @@ export const useCart = () => {
     queryKey: ['cart'],
     queryFn: async () => {
       const response = await cartAPI.get();
-      console.log('Cart API Response:', response.data);
+      // Debug log removed
       return response.data;
     },
     retry: false,

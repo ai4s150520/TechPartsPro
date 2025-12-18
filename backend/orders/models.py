@@ -68,6 +68,7 @@ class OrderItem(models.Model):
     class ItemStatus(models.TextChoices):
         PENDING = 'PENDING', 'Pending'
         PROCESSING = 'PROCESSING', 'Processing'
+        PACKAGED = 'PACKAGED', 'Packaged'
         SHIPPED = 'SHIPPED', 'Shipped'
         DELIVERED = 'DELIVERED', 'Delivered'
         CANCELLED = 'CANCELLED', 'Cancelled'

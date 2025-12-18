@@ -9,7 +9,7 @@ export const useAddresses = () => {
     queryKey: ['addresses'],
     queryFn: async () => {
       const response = await addressAPI.list();
-      console.log('Addresses API Response:', response.data);
+      // Debug log removed
       return response.data;
     },
     enabled: isAuthenticated,

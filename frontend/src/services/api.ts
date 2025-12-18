@@ -108,6 +108,10 @@ export const orderAPI = {
   
   cancel: (id: number) =>
     apiClient.post(`/orders/${id}/cancel/`),
+  replace: (id: number) =>
+    apiClient.post(`/orders/${id}/replace/`),
+  refund: (id: number) =>
+    apiClient.post(`/orders/${id}/refund/`),
   
   track: (orderId: string) =>
     apiClient.get(`/orders/${orderId}/track/`),
@@ -184,6 +188,18 @@ export const sellerAPI = {
   
   updateOrderStatus: (orderId: number, status: string) =>
     apiClient.patch(`/sellers/orders/${orderId}/`, { status }),
+  
+    packOrderItem: (itemId: string) =>
+      apiClient.post(`/sellers/orders/${itemId}/pack/`),
+  
+    shipOrderItem: (itemId: string, data: { tracking_number?: string; courier_name?: string; estimated_days?: number }) =>
+      apiClient.post(`/sellers/orders/${itemId}/ship/`, data),
+
+    getCustomerAddresses: (itemId: string) =>
+      apiClient.get(`/sellers/orders/${itemId}/customer-addresses/`),
+
+    getCouriers: () =>
+      apiClient.get('/shipping/couriers/'),
 };
 
 // ==================== WALLET ====================

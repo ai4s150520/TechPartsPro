@@ -145,3 +145,51 @@ class PaymentService:
         except Exception as e:
             logger.error(f"Webhook signature verification failed: {e}")
             return False
+
+    @staticmethod
+    def refund_order(order):
+        """Attempt to refund a paid order via Razorpay and mark transaction REFUNDED.
+        Raises ValidationError on failure.
+        """
+        try:
+            # Find a successful transaction for this order
+            txn = Transaction.objects.filter(order=order, status=Transaction.Status.SUCCESS).order_by('-created_at').first()
+            if not txn:
+                raise ValidationError('No successful transaction found to refund')
+
+            gw = txn.gateway_response or {}
+            payment_id = gw.get('razorpay_payment_id') or gw.get('payment_id')
+            if not payment_id:
+                raise ValidationError('Payment id not found in transaction')
+
+            amount_paise = int(order.total_amount * 100)
+            # Call Razorpay refund API
+            try:
+                refund_resp = client.payment.refund(payment_id, {'amount': amount_paise})
+            except Exception as e:
+                logger.error(f"Razorpay refund failed: {e}")
+                raise ValidationError(f"Refund failed: {str(e)}")
+
+            # Update transaction status and gateway_response
+            txn.status = Transaction.Status.REFUNDED
+            txn.gateway_response = {**gw, 'refund': refund_resp}
+            txn.save()
+
+            # Notify user
+            try:
+                NotificationService.create_notification(
+                    user=order.user,
+                    title='Refund Initiated',
+                    message=f'Refund for order {order.order_id} initiated. Amount: ₹{order.total_amount}',
+                    type='INFO'
+                )
+            except Exception:
+                pass
+
+            return refund_resp
+
+        except ValidationError:
+            raise
+        except Exception as e:
+            logger.error(f"Refund processing error: {e}")
+            raise ValidationError('Refund failed')

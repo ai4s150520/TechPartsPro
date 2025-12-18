@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, MapPin, CheckCircle } from 'lucide-react';
 import apiClient from '../../lib/apiClient';
+import { orderAPI } from '../../services/api';
+import { toast } from 'react-toastify';
 import AccountSidebar from '../../components/layout/AccountSidebar';
 // Import Centralized Helpers
 import { formatPrice, getImageUrl } from '../../lib/utils';
@@ -10,6 +12,7 @@ const OrderDetailPage: React.FC = () => {
   const { id } = useParams();
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showReturnModal, setShowReturnModal] = useState(false);
 
   useEffect(() => {
     apiClient.get(`/orders/${id}/`)
@@ -43,12 +46,94 @@ const OrderDetailPage: React.FC = () => {
                 <h1 className="text-xl font-bold text-gray-900">Order #{order.order_id}</h1>
                 <p className="text-sm text-gray-500">Placed on {new Date(order.created_at).toLocaleString()}</p>
               </div>
-              {order.tracking_number && (
-                <div className="bg-blue-50 px-4 py-2 rounded-lg">
-                  <p className="text-xs text-blue-600 font-bold uppercase">Tracking Number</p>
-                  <p className="font-mono text-blue-900">{order.tracking_number} ({order.courier_name})</p>
+              <div className="flex items-center gap-3">
+                {order.tracking_number && (
+                  <div className="bg-blue-50 px-4 py-2 rounded-lg">
+                    <p className="text-xs text-blue-600 font-bold uppercase">Tracking Number</p>
+                    <p className="font-mono text-blue-900">{order.tracking_number} ({order.courier_name})</p>
+                  </div>
+                )}
+
+                <div className="ml-4 flex items-center gap-2">
+                  {order.cancellable && (
+                    <button
+                      onClick={async () => {
+                        if (!confirm('Are you sure you want to cancel this order?')) return;
+                        try {
+                          await orderAPI.cancel(order.id);
+                          toast.success('Order cancelled successfully');
+                          window.location.reload();
+                        } catch (err: any) {
+                          toast.error(err?.response?.data?.error || 'Failed to cancel order');
+                        }
+                      }}
+                      className="px-3 py-1 rounded border border-red-300 text-red-600 bg-white hover:bg-red-50 text-sm"
+                    >
+                      Cancel Order
+                    </button>
+                  )}
+
+                  {order.cancellable && (
+                    <button
+                      onClick={() => setShowReturnModal(true)}
+                      className="px-3 py-1 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 text-sm"
+                    >
+                      Return
+                    </button>
+                  )}
                 </div>
-              )}
+              </div>
+                  {showReturnModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center">
+                      <div className="absolute inset-0 bg-black opacity-40" onClick={() => setShowReturnModal(false)} />
+                      <div className="relative bg-white rounded-lg shadow-lg p-6 w-full max-w-md z-10">
+                        <h3 className="text-lg font-bold mb-3">Return Options</h3>
+                        <p className="text-sm text-gray-600 mb-4">Choose how you'd like to proceed for this order.</p>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={async () => {
+                              if (!confirm('Create a replacement order for these items?')) return;
+                              try {
+                                const resp = await orderAPI.replace(order.id);
+                                toast.success('Replacement order created');
+                                setShowReturnModal(false);
+                                if (resp.data?.payment_required) {
+                                  window.location.href = `/account/orders/${resp.data.new_order_id}`;
+                                } else {
+                                  window.location.reload();
+                                }
+                              } catch (err: any) {
+                                toast.error(err?.response?.data?.error || 'Failed to create replacement order');
+                              }
+                            }}
+                            className="flex-1 px-3 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+                          >
+                            Replace
+                          </button>
+
+                          <button
+                            onClick={async () => {
+                              if (!confirm('Request a refund for this order?')) return;
+                              try {
+                                await orderAPI.refund(order.id);
+                                toast.success('Refund initiated');
+                                setShowReturnModal(false);
+                                window.location.reload();
+                              } catch (err: any) {
+                                toast.error(err?.response?.data?.error || 'Failed to initiate refund');
+                              }
+                            }}
+                            className="flex-1 px-3 py-2 rounded border border-red-300 text-red-600 bg-white hover:bg-red-50"
+                          >
+                            Refund
+                          </button>
+                        </div>
+                        <div className="text-right mt-4">
+                          <button onClick={() => setShowReturnModal(false)} className="text-sm text-gray-500">Close</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
             </div>
 
             {/* Status Bar */}

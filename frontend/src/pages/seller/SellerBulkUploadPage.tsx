@@ -3,6 +3,7 @@ import { Upload, FileSpreadsheet, AlertCircle, CheckCircle, Download, Loader } f
 import { toast } from 'react-toastify';
 import apiClient from '../../lib/apiClient';
 import { Button } from '../../components/ui/Button';
+import { sellerAPI } from '../../services/api';
 
 const SellerBulkUploadPage: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -10,6 +11,8 @@ const SellerBulkUploadPage: React.FC = () => {
   const [taskId, setTaskId] = useState<string | null>(null);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [report, setReport] = useState<{ created: number; updated: number; errors: string[] } | null>(null);
+  const [isProfileComplete, setIsProfileComplete] = useState<boolean>(true);
+  const [profileLoading, setProfileLoading] = useState<boolean>(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -27,6 +30,11 @@ const SellerBulkUploadPage: React.FC = () => {
     formData.append('file', file);
 
     try {
+      if (!isProfileComplete && !profileLoading) {
+        toast.error('Please complete your seller profile (bank details / email) before bulk uploading.');
+        setUploading(false);
+        return;
+      }
       const { data } = await apiClient.post('/catalog/products/bulk-upload/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 600000, // 10 minutes for large files
@@ -79,6 +87,17 @@ const SellerBulkUploadPage: React.FC = () => {
     return () => clearInterval(interval);
   }, [taskId]);
 
+  useEffect(() => {
+    let mounted = true;
+    setProfileLoading(true);
+    sellerAPI.getProfile()
+      .then(res => { if (!mounted) return; setIsProfileComplete(!!res.data.is_approved); })
+      .catch(() => { if (!mounted) return; setIsProfileComplete(false); })
+      .finally(() => mounted && setProfileLoading(false));
+
+    return () => { mounted = false };
+  }, []);
+
   const downloadTemplate = () => {
     const headers = "Name,SKU,Category,MRP,Stock,GST_Percent,Discount_Percent,Brand,Image_URLs,Description";
     const example = "Vivo V21 Screen,VIVO-V21-LCD,Screens,6000,50,18,10,Vivo,\"http://img.com/1.jpg, http://img.com/2.jpg\",Original Display";
@@ -115,6 +134,7 @@ const SellerBulkUploadPage: React.FC = () => {
             type="file" 
             accept=".xlsx, .xls, .csv"
             onChange={handleFileChange}
+            disabled={!isProfileComplete}
             className="block w-full text-sm text-slate-500
               file:mr-4 file:py-2 file:px-4
               file:rounded-full file:border-0
@@ -123,6 +143,10 @@ const SellerBulkUploadPage: React.FC = () => {
               hover:file:bg-blue-100"
           />
         </div>
+
+        {!profileLoading && !isProfileComplete && (
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">Please complete your seller profile (bank details / email) before bulk uploading. <a href="/seller/profile" className="underline font-medium">Complete profile</a></div>
+        )}
 
         {uploading && progress.total > 0 && (
           <div className="mb-4">
@@ -141,7 +165,7 @@ const SellerBulkUploadPage: React.FC = () => {
 
         <Button 
           onClick={handleUpload} 
-          disabled={!file || uploading} 
+          disabled={!file || uploading || (!isProfileComplete && !profileLoading)} 
           isLoading={uploading}
           variant="seller"
           className="w-48"

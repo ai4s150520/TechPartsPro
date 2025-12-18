@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
@@ -115,7 +116,10 @@ class SellerProfileSerializer(serializers.ModelSerializer):
         aadhaar = validated_data.pop('aadhaar_number', None)
         if aadhaar:
             instance.aadhaar_number = aadhaar
-        return super().update(instance, validated_data)
+        try:
+            return super().update(instance, validated_data)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError({'detail': e.messages})
 
 # --- PASSWORD RESET REQUEST SERIALIZER ---
 class PasswordResetRequestSerializer(serializers.Serializer):

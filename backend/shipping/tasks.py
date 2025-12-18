@@ -51,7 +51,7 @@ def sync_tracking_updates():
                     order.save()
         
         except Exception as e:
-            print(f"Failed to sync tracking for item {item.id}: {e}")
+            logger.error(f"Failed to sync tracking for item {item.id}: {e}")
             continue
     
     return f"Synced {synced_count} items"

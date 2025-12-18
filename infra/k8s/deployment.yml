@@ -21,9 +21,11 @@ metadata:
   namespace: ecommerce
 type: Opaque
 stringData:
-  SECRET_KEY: "change-this-to-your-secret-key"
-  DATABASE_URL: "postgres://user:pass@postgres:5432/ecommerce_db"
-  RAZORPAY_KEY_SECRET: "your-razorpay-secret"
+  # Values intentionally left blank. Populate secrets using your secret management
+  # solution or `kubectl create secret` in CI/CD. Do NOT commit real secrets.
+  SECRET_KEY: ""
+  DATABASE_URL: ""
+  RAZORPAY_KEY_SECRET: ""
 
 ---
 apiVersion: apps/v1

@@ -8,6 +8,7 @@ from corsheaders.defaults import default_headers, default_methods
 import os
 import environ
 from datetime import timedelta
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -376,6 +377,24 @@ LOGGING = {
         },
     },
 }
+
+# --- Production sanity checks ---
+if not DEBUG:
+    # Ensure SECRET_KEY is set and not a placeholder
+    if not SECRET_KEY or SECRET_KEY.startswith('dev'):
+        raise ImproperlyConfigured('SECRET_KEY must be set to a secure value in production')
+
+    # Disallow default sqlite database in production
+    try:
+        db_name = DATABASES['default'].get('NAME', '')
+        if db_name and str(db_name).endswith('db.sqlite3'):
+            raise ImproperlyConfigured('Sqlite is not supported in production. Configure DATABASE_URL for Postgres.')
+    except Exception:
+        raise ImproperlyConfigured('Database configuration invalid for production')
+
+    # Ensure payment gateway secrets are configured
+    if not RAZORPAY_KEY_SECRET or RAZORPAY_KEY_SECRET in ('', 'secret_placeholder'):
+        raise ImproperlyConfigured('RAZORPAY_KEY_SECRET must be set in production environment')
 
 # --- SENTRY ERROR TRACKING ---
 SENTRY_DSN = env('SENTRY_DSN', default='')

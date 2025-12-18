@@ -30,10 +30,7 @@ const CheckoutPage: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState('CARD');
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
 
-  console.log('Addresses data:', addresses);
-  console.log('Addresses type:', typeof addresses);
-  console.log('Is array?', Array.isArray(addresses));
-  console.log('Addresses keys:', addresses ? Object.keys(addresses) : 'null');
+  // Removed debug logs
   
   // Backend returns paginated response with 'results' array
   const addressList = Array.isArray(addresses) 
@@ -51,7 +48,7 @@ const CheckoutPage: React.FC = () => {
       { address_id: selectedAddress, payment_method: paymentMethod },
       {
         onSuccess: async (response: any) => {
-          console.log('Order response:', response);
+          // Order response received
           const orderData = response?.data || response;
           const orderId = orderData?.order_id;
           

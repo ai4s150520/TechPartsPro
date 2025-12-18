@@ -31,6 +31,7 @@ const SellerProfilePage: React.FC = () => {
     aadhaar_masked: '',
     pan_verified: false,
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [otpModal, setOtpModal] = useState({ show: false, type: '', otp: '' });
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [forgotModal, setForgotModal] = useState({ show: false, email: '', loading: false });
@@ -68,6 +69,8 @@ const SellerProfilePage: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Clear field-level error on change
+    setErrors(prev => ({ ...prev, [e.target.name]: '' }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -79,7 +82,29 @@ const SellerProfilePage: React.FC = () => {
       setIsEditing(false);
       fetchProfile();
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Failed to update profile');
+      // Map and display validation errors if present
+      const resp = error.response?.data;
+      if (error.response?.status === 400 && resp) {
+        // resp may be { field: [msg] } or { detail: [msg] }
+        const newErrors: Record<string, string> = {};
+        if (typeof resp === 'object') {
+          Object.keys(resp).forEach((key) => {
+            const val = resp[key];
+            if (Array.isArray(val)) newErrors[key] = String(val[0]);
+            else if (typeof val === 'string') newErrors[key] = val;
+          });
+        }
+        setErrors(newErrors);
+        // Show summary toast
+        if (newErrors.detail) {
+          toast.error(Array.isArray(resp.detail) ? resp.detail.join(', ') : resp.detail);
+        } else {
+          const first = Object.values(newErrors)[0];
+          toast.error(first || 'Failed to update profile');
+        }
+      } else {
+        toast.error('Failed to update profile');
+      }
     } finally {
       setLoading(false);
     }
@@ -168,6 +193,7 @@ const SellerProfilePage: React.FC = () => {
               icon={Store}
               disabled={!isEditing}
               required
+              error={errors.business_name}
             />
             <Input
               label="Business Email"
@@ -178,6 +204,7 @@ const SellerProfilePage: React.FC = () => {
               icon={Mail}
               disabled={!isEditing}
               required
+              error={errors.business_email}
             />
           </div>
 
@@ -190,6 +217,7 @@ const SellerProfilePage: React.FC = () => {
               icon={Phone}
               disabled={!isEditing}
               required
+              error={errors.business_phone}
             />
             <Input
               label="GST Number"
@@ -198,6 +226,7 @@ const SellerProfilePage: React.FC = () => {
               onChange={handleChange}
               placeholder="22AAAAA0000A1Z5"
               disabled={!isEditing}
+              error={errors.gst_number}
             />
           </div>
 
@@ -266,6 +295,7 @@ const SellerProfilePage: React.FC = () => {
                     placeholder="ABCDE1234F"
                     maxLength={10}
                     disabled={!isEditing || kycData.pan_verified}
+                    error={errors.pan_number}
                   />
                   {!kycData.pan_verified && (
                     <>
@@ -276,6 +306,7 @@ const SellerProfilePage: React.FC = () => {
                         onChange={handleChange}
                         placeholder="As per PAN card"
                         disabled={!isEditing}
+                        error={errors.pan_holder_name}
                       />
                       {isEditing && formData.pan_number.length === 10 && formData.pan_holder_name && (
                         <Button type="button" onClick={() => sendOTP('pan')} isLoading={verifyLoading}>
@@ -299,6 +330,7 @@ const SellerProfilePage: React.FC = () => {
                 onChange={handleChange}
                 disabled={!isEditing}
                 required
+                error={errors.bank_account_holder_name}
               />
               <Input
                 label="Bank Name"
@@ -307,6 +339,7 @@ const SellerProfilePage: React.FC = () => {
                 onChange={handleChange}
                 disabled={!isEditing}
                 placeholder="e.g., HDFC Bank"
+                error={errors.bank_name}
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
@@ -317,6 +350,7 @@ const SellerProfilePage: React.FC = () => {
                 onChange={handleChange}
                 disabled={!isEditing}
                 required
+                error={errors.bank_account_number}
               />
               <Input
                 label="IFSC Code"
@@ -326,6 +360,7 @@ const SellerProfilePage: React.FC = () => {
                 disabled={!isEditing}
                 placeholder="e.g., HDFC0001234"
                 required
+                error={errors.bank_ifsc_code}
               />
             </div>
           </div>
@@ -344,6 +379,11 @@ const SellerProfilePage: React.FC = () => {
               disabled={!isEditing}
               required
             />
+            {errors.warehouse_address && (
+              <div className="mt-1.5 flex items-center text-xs text-red-600">
+                {errors.warehouse_address}
+              </div>
+            )}
           </div>
 
           {isEditing && (

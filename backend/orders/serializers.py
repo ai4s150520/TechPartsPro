@@ -29,6 +29,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
+    cancellable = serializers.SerializerMethodField()
     
     class Meta:
         model = Order
@@ -37,6 +38,23 @@ class OrderSerializer(serializers.ModelSerializer):
             'discount_amount', 'shipping_address', 'items', 'created_at', 'updated_at',
             'tracking_number', 'courier_name', 'estimated_delivery', 'tracking_updates'
         ]
+        # Add computed flag
+        fields = fields + ['cancellable']
+
+    def get_cancellable(self, obj):
+        """An order is cancellable if it's in PENDING or PROCESSING and no shipment is OUT_FOR_DELIVERY."""
+        if obj.status not in [Order.Status.PENDING, Order.Status.PROCESSING]:
+            return False
+
+        # If any shipment exists with OUT_FOR_DELIVERY, cannot cancel
+        try:
+            if obj.shipments.filter(status='OUT_FOR_DELIVERY').exists():
+                return False
+        except Exception:
+            # If shipments relation isn't available or any error, be conservative
+            return False
+
+        return True
 
 class CreateOrderSerializer(serializers.Serializer):
     """
