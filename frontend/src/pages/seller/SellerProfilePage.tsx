@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Store, Mail, Phone, MapPin, Save, Edit2, X, Shield, CheckCircle, XCircle, Send } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Store, Mail, Phone, MapPin, Save, Edit2, X, Shield, CheckCircle, XCircle, Send, Key } from 'lucide-react';
 import { toast } from 'react-toastify';
 import apiClient from '../../lib/apiClient';
 import { useAuthStore } from '../../store/authStore';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { authAPI } from '../../services/api';
 
 const SellerProfilePage: React.FC = () => {
   const { user } = useAuthStore();
@@ -31,6 +33,7 @@ const SellerProfilePage: React.FC = () => {
   });
   const [otpModal, setOtpModal] = useState({ show: false, type: '', otp: '' });
   const [verifyLoading, setVerifyLoading] = useState(false);
+  const [forgotModal, setForgotModal] = useState({ show: false, email: '', loading: false });
 
   useEffect(() => {
     fetchProfile();
@@ -121,15 +124,27 @@ const SellerProfilePage: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Business Profile</h1>
-        {!isEditing ? (
-          <Button onClick={() => setIsEditing(true)} variant="outline">
-            <Edit2 className="w-4 h-4 mr-2" /> Edit Profile
+        <div className="flex items-center gap-3">
+          {!isEditing ? (
+            <Button onClick={() => setIsEditing(true)} variant="outline">
+              <Edit2 className="w-4 h-4 mr-2" /> Edit Profile
+            </Button>
+          ) : (
+            <Button onClick={() => setIsEditing(false)} variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
+              <X className="w-4 h-4 mr-2" /> Cancel
+            </Button>
+          )}
+
+          <Link to="/seller/change-password">
+            <Button variant="outline" className="hidden sm:inline-flex">
+              <Key className="w-4 h-4 mr-2" /> Change Password
+            </Button>
+          </Link>
+
+          <Button onClick={() => setForgotModal({ ...forgotModal, show: true, email: formData.business_email || user?.email || '' })} variant="ghost" className="text-sm">
+            Forgot Password
           </Button>
-        ) : (
-          <Button onClick={() => setIsEditing(false)} variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
-            <X className="w-4 h-4 mr-2" /> Cancel
-          </Button>
-        )}
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -369,6 +384,44 @@ const SellerProfilePage: React.FC = () => {
                 variant="outline"
                 className="flex-1"
               >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Forgot Password Modal */}
+      {forgotModal.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold mb-4">Send Password Reset</h3>
+            <p className="text-sm text-gray-600 mb-4">We'll send a password reset link to the provided email.</p>
+            <Input
+              label="Email"
+              value={forgotModal.email}
+              onChange={(e) => setForgotModal({ ...forgotModal, email: e.target.value })}
+              placeholder="your@email.com"
+            />
+            <div className="flex gap-3 mt-6">
+              <Button
+                onClick={async () => {
+                  setForgotModal({ ...forgotModal, loading: true });
+                  try {
+                    await authAPI.forgotPassword(forgotModal.email);
+                    toast.success('Password reset link sent if account exists');
+                    setForgotModal({ show: false, email: '', loading: false });
+                  } catch (err: any) {
+                    toast.error(err.response?.data?.detail || 'Failed to send reset link');
+                    setForgotModal({ ...forgotModal, loading: false });
+                  }
+                }}
+                isLoading={forgotModal.loading}
+                className="flex-1"
+              >
+                Send Link
+              </Button>
+              <Button onClick={() => setForgotModal({ show: false, email: '', loading: false })} variant="outline" className="flex-1">
                 Cancel
               </Button>
             </div>

@@ -53,6 +53,7 @@ import SellerOrdersPage from './pages/seller/SellerOrdersPage';
 import SellerPayoutsPage from './pages/seller/SellerPayoutsPage';
 import SellerBulkUploadPage from './pages/seller/SellerBulkUploadPage';
 import SellerProfilePage from './pages/seller/SellerProfilePage';
+import SellerChangePasswordPage from './pages/seller/SellerChangePasswordPage';
 
 
 // --- PAGES: INFO & LEGAL ---
@@ -156,6 +157,7 @@ function App() {
             
             {/* Profile */}
             <Route path="seller/profile" element={<SellerProfilePage />} />
+            <Route path="seller/change-password" element={<SellerChangePasswordPage />} />
             
             {/* Redirect root seller path to home */}
             <Route path="seller" element={<Navigate to="/seller/home" replace />} />

@@ -14,11 +14,17 @@ const ProductsPage: React.FC = () => {
     category: searchParams.get('category') || '',
     min_price: searchParams.get('min_price') ? Number(searchParams.get('min_price')) : undefined,
     max_price: searchParams.get('max_price') ? Number(searchParams.get('max_price')) : undefined,
+    ordering: searchParams.get('ordering') || undefined,
     page: 1
   });
 
   const { data, isLoading } = useProducts(filters);
-  const products = data?.data?.results || [];
+  const products = data?.results || [];
+  
+  React.useEffect(() => {
+    console.log('Filters:', filters);
+    console.log('Products count:', products.length);
+  }, [filters, products]);
 
   const handleFilterChange = (newFilters: typeof filters) => {
     setFilters(newFilters);
@@ -27,6 +33,7 @@ const ProductsPage: React.FC = () => {
     if (newFilters.category) params.set('category', newFilters.category);
     if (newFilters.min_price) params.set('min_price', String(newFilters.min_price));
     if (newFilters.max_price) params.set('max_price', String(newFilters.max_price));
+    if (newFilters.ordering) params.set('ordering', newFilters.ordering);
     setSearchParams(params);
   }
 
@@ -62,7 +69,7 @@ const ProductsPage: React.FC = () => {
               title="No products found"
               description="We couldn't find any products matching your search. Try adjusting your filters or search terms."
               actionText="Clear Filters"
-              onAction={() => handleFilterChange({ search: '', category: '', min_price: undefined, max_price: undefined, page: 1 })}
+              onAction={() => handleFilterChange({ search: '', category: '', min_price: undefined, max_price: undefined, ordering: undefined, page: 1 })}
             />
           ) : (
             <ProductGrid products={products} loading={false} />

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productAPI } from '../services/api';
 
-export const useProducts = (params?: { category?: string; search?: string; min_price?: number; max_price?: number; page?: number }) => {
+export const useProducts = (params?: { category?: string; search?: string; min_price?: number; max_price?: number; page?: number; ordering?: string }) => {
   return useQuery({
     queryKey: ['products', params],
     queryFn: async () => {

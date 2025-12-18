@@ -35,9 +35,9 @@ const HomePage: React.FC = () => {
           apiClient.get('/catalog/products/?ordering=-review_count&page_size=8'),
           apiClient.get('/catalog/categories/')
         ]);
-        setFeaturedProducts(featured.data.results);
-        setTrendingProducts(trending.data.results);
-        setCategories(cats.data.results || cats.data);
+        setFeaturedProducts(featured.data.results || []);
+        setTrendingProducts(trending.data.results || []);
+        setCategories(Array.isArray(cats.data) ? cats.data : (cats.data.results || []));
       } catch (error) {
         console.error("Failed to load home data", error);
       } finally {

@@ -45,7 +45,7 @@ export const authAPI = {
 
 // ==================== PRODUCTS ====================
 export const productAPI = {
-  list: (params?: { category?: string; search?: string; min_price?: number; max_price?: number; page?: number }) =>
+  list: (params?: { category?: string; search?: string; min_price?: number; max_price?: number; page?: number; ordering?: string }) =>
     apiClient.get<{ results: Product[]; count: number }>('/catalog/products/', { params }),
   
   get: (slug: string) =>

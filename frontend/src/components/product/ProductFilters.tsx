@@ -24,8 +24,8 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, setFilters, cl
           apiClient.get('/catalog/categories/'),
           apiClient.get('/catalog/brands/')
         ]);
-        setCategories(catRes.data.results);
-        setBrands(brandRes.data.results);
+        setCategories(Array.isArray(catRes.data) ? catRes.data : (catRes.data.results || []));
+        setBrands(Array.isArray(brandRes.data) ? brandRes.data : (brandRes.data.results || []));
       } catch (error) {
         console.error("Filter data load error", error);
       }
@@ -43,7 +43,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, setFilters, cl
   };
 
   const clearFilters = () => {
-    setFilters({ page: 1, search: '', category: '', min_price: '', max_price: '' });
+    setFilters({ page: 1, search: '', category: '', min_price: '', max_price: '', ordering: '' });
   };
 
   return (

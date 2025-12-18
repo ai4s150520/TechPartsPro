@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Upload, FileSpreadsheet, AlertCircle, CheckCircle, Download } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Upload, FileSpreadsheet, AlertCircle, CheckCircle, Download, Loader } from 'lucide-react';
 import { toast } from 'react-toastify';
 import apiClient from '../../lib/apiClient';
 import { Button } from '../../components/ui/Button';
@@ -7,7 +7,8 @@ import { Button } from '../../components/ui/Button';
 const SellerBulkUploadPage: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  // Updated state to handle 'updated' count from backend
+  const [taskId, setTaskId] = useState<string | null>(null);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [report, setReport] = useState<{ created: number; updated: number; errors: string[] } | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,29 +22,66 @@ const SellerBulkUploadPage: React.FC = () => {
     if (!file) return;
     
     setUploading(true);
+    setReport(null);
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      // INCREASED TIMEOUT: 5 Minutes (300000ms) for 2000 items
       const { data } = await apiClient.post('/catalog/products/bulk-upload/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 300000 
+        timeout: 600000, // 10 minutes for large files
       });
-      setReport(data);
+      
+      // Handle both async (with task_id) and sync responses
+      if (data.task_id) {
+        setTaskId(data.task_id);
+        toast.success(data.message);
+      } else if (data.status === 'success') {
+        // Synchronous response
+        setReport(data);
+        setUploading(false);
+        toast.success(`Upload completed! ${data.created} created, ${data.updated} updated`);
+      }
     } catch (error: any) {
-      const msg = error.response?.data?.error || "Upload failed. Server might be busy processing.";
+      const msg = error.response?.data?.error || "Upload failed";
       toast.error(msg);
-      console.error(error);
-    } finally {
       setUploading(false);
     }
   };
 
+  // Poll task status
+  useEffect(() => {
+    if (!taskId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const { data } = await apiClient.get(`/catalog/products/bulk-upload/status/${taskId}/`);
+        
+        if (data.state === 'PROGRESS') {
+          setProgress({ current: data.current, total: data.total });
+        } else if (data.state === 'SUCCESS') {
+          setReport(data.result);
+          setUploading(false);
+          setTaskId(null);
+          toast.success('Upload completed!');
+          clearInterval(interval);
+        } else if (data.state === 'FAILURE') {
+          toast.error('Upload failed');
+          setUploading(false);
+          setTaskId(null);
+          clearInterval(interval);
+        }
+      } catch (error) {
+        console.error('Status check failed:', error);
+      }
+    }, 2000); // Check every 2 seconds
+
+    return () => clearInterval(interval);
+  }, [taskId]);
+
   const downloadTemplate = () => {
-    // Updated Headers to match the new robust logic
-    const headers = "Name,SKU,Category,MRP,Stock,GST_Percent,Brand,Image_URLs,Description";
-    const example = "Vivo V21 Screen,VIVO-V21-LCD,Screens,6000,50,18,Vivo,\"http://img.com/1.jpg, http://img.com/2.jpg\",Original Display";
+    const headers = "Name,SKU,Category,MRP,Stock,GST_Percent,Discount_Percent,Brand,Image_URLs,Description";
+    const example = "Vivo V21 Screen,VIVO-V21-LCD,Screens,6000,50,18,10,Vivo,\"http://img.com/1.jpg, http://img.com/2.jpg\",Original Display";
     const csvContent = "data:text/csv;charset=utf-8," + headers + "\n" + example;
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -69,7 +107,7 @@ const SellerBulkUploadPage: React.FC = () => {
         
         <h3 className="text-lg font-medium text-gray-900 mb-2">Upload your Excel/CSV</h3>
         <p className="text-gray-500 text-sm mb-6">
-          Supports .xlsx and .csv. Max 2000 rows per file.
+          Supports .xlsx and .csv. Max 10,000 rows per file.
         </p>
 
         <div className="flex justify-center mb-6">
@@ -86,6 +124,21 @@ const SellerBulkUploadPage: React.FC = () => {
           />
         </div>
 
+        {uploading && progress.total > 0 && (
+          <div className="mb-4">
+            <div className="flex justify-between text-sm text-gray-600 mb-2">
+              <span>Processing...</span>
+              <span>{progress.current} / {progress.total}</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all"
+                style={{ width: `${(progress.current / progress.total) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         <Button 
           onClick={handleUpload} 
           disabled={!file || uploading} 
@@ -93,7 +146,12 @@ const SellerBulkUploadPage: React.FC = () => {
           variant="seller"
           className="w-48"
         >
-          {uploading ? 'Processing 2000 Items...' : 'Start Upload'}
+          {uploading ? (
+            <span className="flex items-center">
+              <Loader className="w-4 h-4 mr-2 animate-spin" />
+              Processing...
+            </span>
+          ) : 'Start Upload'}
         </Button>
       </div>
 
@@ -112,7 +170,7 @@ const SellerBulkUploadPage: React.FC = () => {
             </div>
           </div>
           
-          {report.errors.length > 0 ? (
+          {report.errors && report.errors.length > 0 ? (
             <div className="p-4 bg-red-50 max-h-60 overflow-y-auto">
               <h4 className="text-sm font-bold text-red-800 mb-2 flex items-center">
                 <AlertCircle className="w-4 h-4 mr-2" /> Errors Found ({report.errors.length})

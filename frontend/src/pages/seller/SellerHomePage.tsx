@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Package, TrendingUp, Upload, Plus, BarChart3, DollarSign, ShoppingBag, Users } from 'lucide-react';
+import { Package, TrendingUp, Upload, Plus, BarChart3, DollarSign, ShoppingBag, Users, Key } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
 const SellerHomePage: React.FC = () => {
@@ -24,11 +24,19 @@ const SellerHomePage: React.FC = () => {
       <div className="bg-gradient-to-r from-orange-600 to-orange-500 rounded-2xl p-8 text-white">
         <h1 className="text-3xl font-bold mb-2">Welcome to Your Seller Portal</h1>
         <p className="text-orange-100 mb-6">Manage your products, orders, and grow your business</p>
-        <Link to="/seller/dashboard">
-          <Button className="bg-white text-orange-600 hover:bg-orange-50">
-            <BarChart3 className="w-4 h-4 mr-2" /> View Dashboard
-          </Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link to="/seller/dashboard">
+            <Button className="bg-white text-orange-600 hover:bg-orange-50">
+              <BarChart3 className="w-4 h-4 mr-2" /> View Dashboard
+            </Button>
+          </Link>
+
+          <Link to="/seller/change-password">
+            <Button variant="outline" className="bg-white/5 text-white hover:bg-white/10">
+              <Key className="w-4 h-4 mr-2" /> Change Password
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Quick Actions */}
