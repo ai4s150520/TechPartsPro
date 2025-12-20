@@ -11,15 +11,17 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,      // CHANGED: Match Docker port mapping
-    host: true,      // CHANGED: Bind to 0.0.0.0 so Docker can expose it
-    open: false,     // CHANGED: Disable auto-open in Docker environment
+    port: 5173,
+    host: true,
+    open: false,
     watch: {
-      usePolling: true, // CRITICAL: Ensures hot-reload works in Docker/WSL
+      usePolling: true,
     },
     proxy: {
       '/api': {
-        target: 'http://backend:8000', // CHANGED: Points to Docker Service 'backend'
+        target: process.env.NODE_ENV === 'production' 
+          ? 'http://backend:8000' 
+          : 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
       },

@@ -65,7 +65,7 @@ class PaymentService:
                 return False
 
             with transaction.atomic():
-                # Validation 3: Get transaction
+                # Validation 3: Get transaction with select_for_update to prevent race conditions
                 try:
                     txn = Transaction.objects.select_for_update().get(
                         payment_id=data.get('razorpay_order_id')

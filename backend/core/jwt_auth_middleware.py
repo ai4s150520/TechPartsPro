@@ -32,10 +32,10 @@ class JwtAuthMiddlewareInstance:
         query_string = self.scope.get('query_string', b'').decode()
         qs = parse_qs(query_string)
         token = qs.get('token')
-        if token:
+        if token and len(token) > 0:
             try:
                 t = UntypedToken(token[0])
-                user_id = t.get('user_id') or t.get('user') or t.get('user_id')
+                user_id = t.get('user_id')
                 if user_id:
                     self.scope['user'] = await get_user(user_id)
                 else:

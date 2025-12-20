@@ -2,13 +2,26 @@ name: CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
   backend-tests:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -17,9 +30,15 @@ jobs:
           python-version: '3.11'
       - name: Install backend deps
         run: |
+          cd backend
           python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt
+          pip install -r requirements.txt
       - name: Run Django migrations and tests
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
+          SECRET_KEY: test-secret-key-for-ci
+          DEBUG: True
+          TESTING: True
         run: |
           cd backend
           python manage.py migrate --noinput
@@ -42,3 +61,7 @@ jobs:
           cd frontend
           npm run lint
         continue-on-error: true
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build

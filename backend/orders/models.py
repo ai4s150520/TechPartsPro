@@ -106,6 +106,9 @@ class OrderItem(models.Model):
         # Validate price is set
         if self.price is None and self.product:
             self.price = self.product.discount_price or self.product.price
+        # Ensure price is never None
+        if self.price is None:
+            self.price = 0
         super().save(*args, **kwargs)
     
     def __str__(self):

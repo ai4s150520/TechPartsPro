@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 // --- LAYOUTS ---
 import Layout from './components/layout/Layout';
 import SellerLayout from './components/seller/SellerLayout';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // --- GLOBAL UI ---
 import ToastContainer from './components/ui/ToastContainer';
@@ -65,11 +66,12 @@ import RefundsPage from './pages/legal/RefundsPage';
 
 const App = () => {
   return (
-    <Router>
-      {/* Global Toast Notifications (Overlay) */}
-      <ToastContainer />
+    <ErrorBoundary>
+      <Router>
+        {/* Global Toast Notifications (Overlay) */}
+        <ToastContainer />
 
-      <Routes>
+        <Routes>
         
         {/* =========================================================
             GROUP 1: MAIN SITE LAYOUT (Header + Footer)
@@ -176,6 +178,7 @@ const App = () => {
 
       </Routes>
     </Router>
+  </ErrorBoundary>
   );
 };
 

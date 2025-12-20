@@ -2,10 +2,14 @@ from cryptography.fernet import Fernet
 from django.conf import settings
 import base64
 import hashlib
+import os
 
 def get_encryption_key():
-    """Generate encryption key from SECRET_KEY"""
-    key = hashlib.sha256(settings.SECRET_KEY.encode()).digest()
+    """Generate encryption key from SECRET_KEY with salt"""
+    # Use a fixed salt for consistency but add SECRET_KEY for security
+    salt = b'ecommerce_salt_2024'
+    key_material = settings.SECRET_KEY.encode() + salt
+    key = hashlib.pbkdf2_hmac('sha256', key_material, salt, 100000)[:32]
     return base64.urlsafe_b64encode(key)
 
 def encrypt_data(data: str) -> str:
@@ -26,5 +30,5 @@ def decrypt_data(encrypted_data: str) -> str:
         fernet = Fernet(get_encryption_key())
         decrypted = fernet.decrypt(encrypted_data.encode())
         return decrypted.decode()
-    except:
+    except Exception:
         return encrypted_data  # Return as-is if decryption fails
