@@ -8,6 +8,9 @@ from django.db.models import Q
 from django.core.files.base import ContentFile
 from django.utils.text import slugify
 from django.core.files.storage import default_storage
+import io as _io
+from django.conf import settings
+import uuid
 from decimal import Decimal
 import pandas as pd
 import requests
@@ -138,152 +141,59 @@ class BulkUploadProductsView(APIView):
             # Validate file size (max 50MB)
             if file_obj.size > 50 * 1024 * 1024:
                 return Response({"error": "File too large. Max 50MB"}, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Read file
-            if file_obj.name.endswith('.csv'):
-                df = pd.read_csv(file_obj)
-            else:
-                df = pd.read_excel(file_obj)
-            
-            row_count = len(df)
-            
-            if row_count > 10000:
-                return Response({
-                    "error": f"Too many rows ({row_count}). Maximum 10,000 rows allowed"
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Process synchronously (works without Celery)
-            created_count = 0
-            updated_count = 0
-            errors = []
-            
-            logger.info(f"Starting bulk upload for user {request.user.username}: {row_count} rows")
-            
-            for index, row in df.iterrows():
-                try:
-                    # Get SKU and validate
-                    sku_raw = row.get('SKU')
-                    if pd.isna(sku_raw):
-                        errors.append(f"Row {index+2}: Missing SKU")
-                        continue
-                    
-                    sku = str(sku_raw).strip()
-                    if not sku:
-                        errors.append(f"Row {index+2}: Empty SKU")
-                        continue
-                    
-                    # Get product name
-                    name_raw = row.get('Name')
-                    if pd.isna(name_raw) or not str(name_raw).strip():
-                        name = f"Product {sku}"
-                    else:
-                        name = str(name_raw).strip()
-                    
-                    # Category
-                    cat_raw = row.get('Category', 'General')
-                    if pd.isna(cat_raw):
-                        cat_raw = 'General'
-                    cat_raw = str(cat_raw).strip()
-                    cat_slug = slugify(cat_raw)
-                    category = Category.objects.filter(slug=cat_slug).first()
-                    if not category:
-                        category = Category.objects.filter(name__iexact=cat_raw).first()
-                    if not category:
-                        category = Category.objects.create(name=cat_raw, slug=cat_slug)
-                    
-                    # Brand
-                    brand = None
-                    brand_raw = row.get('Brand')
-                    if not pd.isna(brand_raw):
-                        brand_name = str(brand_raw).strip()
-                        if brand_name:
-                            brand, _ = Brand.objects.get_or_create(name=brand_name)
-                    
-                    # Pricing
-                    mrp_raw = row.get('MRP', 0)
-                    mrp = Decimal(str(mrp_raw)) if not pd.isna(mrp_raw) else Decimal('0')
-                    
-                    gst_raw = row.get('GST_Percent', 18)
-                    gst = Decimal(str(gst_raw)) if not pd.isna(gst_raw) else Decimal('18')
-                    
-                    discount_raw = row.get('Discount_Percent', 0)
-                    discount_pct = int(discount_raw) if not pd.isna(discount_raw) else 0
-                    
-                    base_price = mrp / (Decimal('1') + (gst / Decimal('100')))
-                    
-                    # Stock
-                    stock_raw = row.get('Stock', 0)
-                    stock = int(stock_raw) if not pd.isna(stock_raw) else 0
-                    
-                    # Description
-                    desc_raw = row.get('Description', '')
-                    description = str(desc_raw).strip() if not pd.isna(desc_raw) else ''
-                    
-                    # Create/Update Product
-                    product, created = Product.objects.update_or_create(
-                        sku=sku,
-                        defaults={
-                            'seller': request.user,
-                            'name': name,
-                            'category': category,
-                            'brand': brand,
-                            'price': base_price,
-                            'discount_percentage': discount_pct,
-                            'tax_rate': gst,
-                            'stock_quantity': stock,
-                            'description': description,
-                            'is_active': True,
-                            'specifications': {'GST': f"{gst}%", 'Type': 'Spare Part'}
-                        }
-                    )
-                    
-                    # Images (skip for speed)
-                    img_urls_raw = row.get('Image_URLs')
-                    if not pd.isna(img_urls_raw) and not product.images.exists():
-                        img_urls_str = str(img_urls_raw).strip()
-                        if img_urls_str:
-                            urls = [u.strip() for u in img_urls_str.split(',')][:3]  # Max 3 images
-                            for i, url in enumerate(urls):
-                                if not url.startswith('http'):
-                                    continue
-                                try:
-                                    res = requests.get(url, timeout=5)
-                                    if res.status_code == 200 and len(res.content) < 5 * 1024 * 1024:
-                                        image = Image.open(BytesIO(res.content))
-                                        image.verify()
-                                        ext = image.format.lower()
-                                        if ext == 'jpeg':
-                                            ext = 'jpg'
-                                        img_name = f"{sku}_{i}.{ext}"
-                                        prod_img = ProductImage(product=product)
-                                        prod_img.image.save(img_name, ContentFile(res.content), save=False)
-                                        if i == 0:
-                                            prod_img.is_feature = True
-                                        prod_img.save()
-                                except:
-                                    continue
-                    
-                    if created:
-                        created_count += 1
-                    else:
-                        updated_count += 1
-                
-                except Exception as e:
-                    error_msg = f"Row {index+2}: {str(e)}"
-                    errors.append(error_msg)
-                    logger.error(error_msg)
-            
-            logger.info(f"Bulk upload completed: {created_count} created, {updated_count} updated, {len(errors)} errors")
-            
-            return Response({
-                "status": "success",
-                "created": created_count,
-                "updated": updated_count,
-                "total_processed": created_count + updated_count,
-                "errors": errors[:50]  # Limit errors
-            }, status=status.HTTP_200_OK)
+
+            # Save file to media storage for background processing
+            upload_dir = 'bulk_uploads'
+            filename = f"{uuid.uuid4().hex}_{file_obj.name}"
+            saved_path = default_storage.save(os.path.join(upload_dir, filename), file_obj)
+
+            # Resolve filesystem path if storage supports it, otherwise pass storage path
+            try:
+                fs_path = default_storage.path(saved_path)
+            except Exception:
+                fs_path = saved_path
+
+            # Fast streamed row count for progress accuracy (CSV: stream lines, Excel: quick pandas read)
+            row_count = None
+            try:
+                lower = filename.lower()
+                if lower.endswith('.csv'):
+                    # Open via storage and count lines excluding header
+                    with default_storage.open(saved_path, 'rb') as fh:
+                        # wrap in text IO for correct newline handling
+                        text_stream = _io.TextIOWrapper(fh, encoding='utf-8', errors='ignore')
+                        # count non-empty lines
+                        cnt = 0
+                        for _ in text_stream:
+                            cnt += 1
+                        # subtract header if present
+                        row_count = max(0, cnt - 1)
+                else:
+                    # For Excel files use pandas (reads into memory but OK for typical sizes)
+                    try:
+                        df_count = pd.read_excel(default_storage.open(saved_path, 'rb'))
+                        row_count = len(df_count)
+                    except Exception:
+                        row_count = None
+            except Exception:
+                row_count = None
+
+            # Enqueue Celery task to process the saved file asynchronously
+            task = process_bulk_upload.delay(fs_path, request.user.id)
+
+            # Return saved storage path and detected row_count for accurate frontend progress
+            resp = {
+                "task_id": task.id,
+                "saved_path": saved_path,
+                "message": "File accepted and queued for processing. You will be notified when complete."
+            }
+            if row_count is not None:
+                resp['row_count'] = int(row_count)
+
+            return Response(resp, status=status.HTTP_202_ACCEPTED)
 
         except Exception as e:
+            logger.exception("Failed to accept bulk upload")
             return Response({"error": f"File error: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -295,25 +205,37 @@ class BulkUploadStatusView(APIView):
         from celery.result import AsyncResult
         
         task = AsyncResult(task_id)
-        
+
+        # task.info may be None for PENDING or on some broker configurations.
+        info = task.info or {}
+
         if task.state == 'PENDING':
             response = {'state': 'PENDING', 'status': 'Task is waiting...'}
         elif task.state == 'PROGRESS':
             response = {
                 'state': 'PROGRESS',
-                'current': task.info.get('current', 0),
-                'total': task.info.get('total', 0),
+                'current': info.get('current', 0),
+                'total': info.get('total', 0),
                 'status': 'Processing...'
             }
         elif task.state == 'SUCCESS':
-            response = {
-                'state': 'SUCCESS',
-                'result': task.info
-            }
+            # If the task returned a failure payload (e.g. {'status': 'failed', 'error': '...'}),
+            # surface it as FAILURE so frontend treats it appropriately.
+            if isinstance(info, dict) and info.get('status') == 'failed':
+                response = {
+                    'state': 'FAILURE',
+                    'status': info.get('error', 'Processing failed'),
+                    'result': info,
+                }
+            else:
+                response = {
+                    'state': 'SUCCESS',
+                    'result': info if isinstance(info, dict) else {'result': info}
+                }
         else:
             response = {
                 'state': task.state,
-                'status': str(task.info)
+                'status': str(info)
             }
         
         return Response(response)

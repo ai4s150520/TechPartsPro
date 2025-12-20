@@ -42,7 +42,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess, initialData }) => 
 
   // 1. Fetch Categories
   useEffect(() => {
-    apiClient.get('/catalog/categories/').then(res => setCategories(res.data.results));
+    apiClient.get('/catalog/categories/')
+      .then(res => {
+        const d = res.data;
+        const results = d && (d.results || Array.isArray(d) ? (d.results || d) : []);
+        setCategories(results);
+      })
+      .catch(() => setCategories([]));
   }, []);
 
   // 2. Check seller profile completeness (prevent creating products if incomplete)

@@ -102,7 +102,5 @@ export interface RequestPayoutRequest {
   amount: number;
 }
 
-export interface UpdateProductRequest extends Partial<Omit<Product, 'id' | 'seller' | 'created_at'>> {
-  // Use Partial because patches might only update price
-  // Images handled via FormData separately usually
-}
+export type UpdateProductRequest = Partial<Omit<Product, 'id' | 'seller' | 'created_at'>>;
+// Use Partial because patches might only update price. Images handled via FormData separately.

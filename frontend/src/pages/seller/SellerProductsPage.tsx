@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Eye, FileSpreadsheet, CheckSquare, Square } from 'lucide-react';
 import { toast } from 'react-toastify';
 import apiClient from '../../lib/apiClient';
+import { productAPI } from '../../services/api';
 import { Button } from '../../components/ui/Button';
 import { formatPrice, getImageUrl } from '../../lib/utils';
 
@@ -12,11 +13,15 @@ const SellerProductsPage: React.FC = () => {
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const location = useLocation(); // Track route changes
 
   const fetchProducts = async () => {
+    setLoading(true); // Show loading state during refresh
     try {
-      const { data } = await apiClient.get('/catalog/products/');
-      setProducts(data.results);
+      // use centralized productAPI which normalizes paginated/non-paginated shapes
+      const res = await productAPI.list();
+      const results = res && res.data && Array.isArray(res.data.results) ? res.data.results : [];
+      setProducts(results);
     } catch (error) {
       console.error(error);
     } finally {
@@ -26,7 +31,8 @@ const SellerProductsPage: React.FC = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]); // Refetch when navigating to this page
 
   const toggleSelect = (slug: string) => {
     setSelectedProducts(prev => {

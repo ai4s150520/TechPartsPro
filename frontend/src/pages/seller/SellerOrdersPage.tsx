@@ -3,6 +3,7 @@ import apiClient from '../../lib/apiClient';
 import { formatPrice } from '../../lib/utils'; // Use formatter
 import { sellerAPI } from '../../services/api';
 import { toast } from 'react-toastify';
+import { connectNotifications } from '../../services/socket';
 
 const SellerOrdersPage: React.FC = () => {
   const [items, setItems] = useState<any[]>([]);
@@ -53,7 +54,26 @@ const SellerOrdersPage: React.FC = () => {
       }
     }, 15000);
 
-    return () => { mounted = false; clearInterval(interval); };
+    // Setup websocket for real-time notifications (if user has JWT stored)
+    let ws: WebSocket | null = null;
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        ws = connectNotifications(token, (data: any) => {
+          if (data.type === 'notification') {
+            const msg = data.message?.title || data.message?.body || 'Notification';
+            toast.info(msg);
+          }
+          if (data.type === 'order_update') {
+            setItems(prev => prev.map(i => i.id === String(data.order_id || i.id) ? { ...i, status: data.status } : i));
+          }
+        });
+      }
+    } catch (e) {
+      // ignore websocket errors
+    }
+
+    return () => { mounted = false; clearInterval(interval); if (ws) ws.close(); };
   }, []);
 
   const handleViewAddresses = async (id: string) => {

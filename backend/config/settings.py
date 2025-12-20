@@ -66,6 +66,8 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "django_elasticsearch_dsl", 
+    # Channels for WebSocket support
+    "channels",
 
     # Project apps
     "core",
@@ -118,6 +120,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
 
 
 # --- DATABASE ---
@@ -288,6 +291,16 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
+
+# Channels (WebSocket) configuration
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [env('REDIS_URL', default='redis://127.0.0.1:6379')],
+        },
+    },
+}
 
 # Only use eager mode in tests, not in dev/prod
 CELERY_TASK_ALWAYS_EAGER = env.bool('CELERY_TASK_ALWAYS_EAGER', default=False)

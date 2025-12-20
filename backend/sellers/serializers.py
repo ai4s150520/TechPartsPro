@@ -4,6 +4,7 @@ from decimal import Decimal
 from .models import Payout
 from accounts.models import SellerProfile
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import IntegrityError
 
 class SellerProfileSerializer(serializers.ModelSerializer):
     """ Used to show the seller their own profile status """
@@ -36,6 +37,12 @@ class SellerProfileSerializer(serializers.ModelSerializer):
         except DjangoValidationError as e:
             # Convert model ValidationError to serializer ValidationError for proper 400 response
             raise serializers.ValidationError({'detail': e.messages})
+        except IntegrityError as e:
+            # Likely unique constraint (e.g., gst_number duplicate) -> return 400 with detail
+            raise serializers.ValidationError({'detail': str(e)})
+        except Exception as e:
+            # Generic catch to avoid 500s leaking to frontend; surface as 400 with message
+            raise serializers.ValidationError({'detail': str(e)})
         return instance
 
 class PayoutSerializer(serializers.ModelSerializer):

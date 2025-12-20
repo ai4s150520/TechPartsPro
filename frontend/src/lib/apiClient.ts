@@ -60,11 +60,13 @@ apiClient.interceptors.response.use(
             refresh: refreshToken,
           });
 
-          // Success: Save new token to Store
+          // Success: Save new tokens to Store
+          // Backend rotates refresh tokens (ROTATE_REFRESH_TOKENS: True), so we get a new refresh token too
           const newAccessToken = response.data.access;
+          const newRefreshToken = response.data.refresh || refreshToken; // Use new refresh if provided
           
-          // Update the store (this persists to localStorage automatically via Zustand middleware)
-          useAuthStore.getState().setTokens(newAccessToken); // Note: refreshToken might rotate depending on backend config
+          // Update the store with BOTH tokens (this persists to localStorage automatically via Zustand middleware)
+          useAuthStore.getState().setTokens(newAccessToken, newRefreshToken);
 
           // Update header for the original request and retry it
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;

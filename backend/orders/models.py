@@ -72,6 +72,7 @@ class OrderItem(models.Model):
         SHIPPED = 'SHIPPED', 'Shipped'
         DELIVERED = 'DELIVERED', 'Delivered'
         CANCELLED = 'CANCELLED', 'Cancelled'
+        RETURNED = 'RETURNED', 'Returned'
     
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True) 

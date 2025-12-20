@@ -5,6 +5,7 @@ A full-stack, production-ready multi-vendor e-commerce marketplace built with Dj
 ## 🚀 Features
 
 ### For Sellers
+
 - Complete seller onboarding and profile management
 - Product catalog with bulk upload (CSV/Excel)
 - Real-time inventory tracking
@@ -14,6 +15,7 @@ A full-stack, production-ready multi-vendor e-commerce marketplace built with Dj
 - Review and rating management
 
 ### For Customers
+
 - Advanced product browsing and search
 - Shopping cart with real-time calculations
 - Wishlist functionality
@@ -24,6 +26,7 @@ A full-stack, production-ready multi-vendor e-commerce marketplace built with Dj
 - Product reviews and ratings
 
 ### For Administrators
+
 - Platform-wide analytics
 - Seller verification and management
 - Coupon and promotion management
@@ -32,6 +35,7 @@ A full-stack, production-ready multi-vendor e-commerce marketplace built with Dj
 ## 🛠️ Tech Stack
 
 ### Backend
+
 - **Framework**: Django 6.0, Django REST Framework
 - **Database**: PostgreSQL
 - **Cache**: Redis
@@ -40,6 +44,7 @@ A full-stack, production-ready multi-vendor e-commerce marketplace built with Dj
 - **API Docs**: DRF Spectacular (OpenAPI/Swagger)
 
 ### Frontend
+
 - **Framework**: React 19 with TypeScript
 - **State Management**: Zustand, TanStack Query
 - **Styling**: Tailwind CSS
@@ -48,6 +53,7 @@ A full-stack, production-ready multi-vendor e-commerce marketplace built with Dj
 - **Forms**: React Hook Form + Zod
 
 ### DevOps
+
 - **Containerization**: Docker, Docker Compose
 - **Orchestration**: Kubernetes
 - **CI/CD**: GitHub Actions
@@ -55,6 +61,7 @@ A full-stack, production-ready multi-vendor e-commerce marketplace built with Dj
 - **Web Server**: Nginx
 
 ### Integrations
+
 - **Payments**: Stripe, Razorpay
 - **Shipping**: Shiprocket API
 - **Notifications**: Email (Celery tasks)
@@ -62,11 +69,13 @@ A full-stack, production-ready multi-vendor e-commerce marketplace built with Dj
 ## 🐳 Quick Start with Docker (Recommended)
 
 ### Prerequisites
+
 - Docker Desktop (Windows/Mac) or Docker Engine (Linux)
 - Docker Compose v2.0+
 - 4GB+ RAM allocated to Docker
 
 ### Windows
+
 ```bash
 # Double-click docker-start.bat
 # OR run in terminal:
@@ -74,12 +83,14 @@ docker-start.bat
 ```
 
 ### Linux/Mac
+
 ```bash
 chmod +x docker-start.sh
 ./docker-start.sh
 ```
 
 ### Manual Docker Setup
+
 ```bash
 # Build and start all services
 docker-compose up --build
@@ -94,6 +105,7 @@ docker-compose exec backend python manage.py createsuperuser
 ```
 
 ### Using Makefile
+
 ```bash
 make docker-build    # Build images
 make docker-up       # Start services
@@ -106,6 +118,7 @@ make docker-down     # Stop services
 ## 📦 Manual Installation
 
 ### Backend Setup
+
 ```bash
 cd backend
 
@@ -131,6 +144,7 @@ python manage.py runserver
 ```
 
 ### Frontend Setup
+
 ```bash
 cd frontend
 
@@ -146,6 +160,7 @@ npm run dev
 ```
 
 ### Start Celery (Required for async tasks)
+
 ```bash
 cd backend
 
@@ -159,11 +174,29 @@ celery -A config beat -l info
 ## 🔧 Configuration
 
 ### Backend Environment Variables
+
+**For Docker Compose (Recommended):**
+
 ```env
 DEBUG=True
 SECRET_KEY=your-secret-key
-DATABASE_URL=postgres://user:pass@localhost:5432/dbname
-CELERY_BROKER_URL=redis://localhost:6379/0
+DATABASE_URL=postgresql://postgres:password@db:5432/ecommerce_db
+REDIS_URL=redis://redis:6379/1
+CELERY_BROKER_URL=redis://redis:6379/0
+RAZORPAY_KEY_ID=your_key
+RAZORPAY_KEY_SECRET=your_secret
+SHIPROCKET_EMAIL=your_email
+SHIPROCKET_PASSWORD=your_password
+```
+
+**For Local Development (Without Docker):**
+
+```env
+DEBUG=True
+SECRET_KEY=your-secret-key
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+REDIS_URL=redis://127.0.0.1:6379/1
+CELERY_BROKER_URL=redis://127.0.0.1:6379/0
 RAZORPAY_KEY_ID=your_key
 RAZORPAY_KEY_SECRET=your_secret
 SHIPROCKET_EMAIL=your_email
@@ -171,6 +204,7 @@ SHIPROCKET_PASSWORD=your_password
 ```
 
 ### Frontend Environment Variables
+
 ```env
 VITE_API_URL=http://localhost:8000/api
 VITE_RAZORPAY_KEY_ID=your_public_key
@@ -186,6 +220,7 @@ VITE_RAZORPAY_KEY_ID=your_public_key
 ## 🧪 Testing
 
 ### Backend Tests
+
 ```bash
 cd backend
 python manage.py test
@@ -196,6 +231,7 @@ coverage report
 ```
 
 ### Frontend Tests
+
 ```bash
 cd frontend
 npm run lint
@@ -203,6 +239,7 @@ npm run build
 ```
 
 ### Docker Tests
+
 ```bash
 docker-compose exec backend python manage.py test
 ```
@@ -210,17 +247,20 @@ docker-compose exec backend python manage.py test
 ## 🚀 Deployment
 
 ### Using Docker Compose (Production)
+
 ```bash
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ### Using Kubernetes
+
 ```bash
 kubectl apply -f infra/k8s/deployment.yml
 kubectl apply -f infra/k8s/monitoring.yml
 ```
 
 ### Using Terraform (GCP)
+
 ```bash
 cd infra/terraform
 terraform init
@@ -285,24 +325,28 @@ ecommerce-marketplace/
 ## 🌟 Key Features Implementation
 
 ### Multi-Vendor System
+
 - Independent seller accounts
 - Seller-specific product management
 - Automated commission calculation
 - Payout management system
 
 ### Payment Processing
+
 - Multiple payment gateways
 - Secure transaction handling
 - Refund management
 - Wallet system for quick checkout
 
 ### Shipping Integration
+
 - Real-time shipping rates
 - Order tracking
 - Automated label generation
 - Multi-carrier support
 
 ### Analytics
+
 - Sales trends and insights
 - Revenue tracking
 - Customer behavior analysis
@@ -323,6 +367,7 @@ This project is licensed under the MIT License.
 ## 👥 Support
 
 For issues and questions:
+
 - Create an issue on GitHub
 - Check documentation in `/docs`
 - Review API documentation at `/api/schema/swagger-ui/`

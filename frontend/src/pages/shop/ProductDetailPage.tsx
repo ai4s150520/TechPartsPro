@@ -29,9 +29,13 @@ const ProductDetailPage: React.FC = () => {
   useEffect(() => {
     apiClient.get(`/catalog/products/${slug}/`)
       .then(res => {
-        setProduct(res.data);
-        const feat = res.data.images.find((img: any) => img.is_feature);
-        setSelectedImage(feat ? feat.image : res.data.images[0]?.image);
+        const data = res.data || {};
+        // Ensure images and specifications are defaulted to arrays/objects to avoid .map errors
+        data.images = Array.isArray(data.images) ? data.images : [];
+        data.specifications = data.specifications || {};
+        setProduct(data);
+        const feat = data.images.find((img: any) => img.is_feature);
+        setSelectedImage(feat ? feat.image : (data.images[0]?.image || ''));
       })
       .catch(() => navigate('/404'))
       .finally(() => setLoading(false));
@@ -329,7 +333,7 @@ const ProductDetailPage: React.FC = () => {
                 <div>
                   <p className="font-bold text-blue-900 text-xs uppercase">TechParts Promise</p>
                   <p className="text-xs text-blue-700 mt-1 leading-tight">
-                    100% Purchase Protection. 7-Day Returns for defective items.
+                    100% Purchase Protection. 3-Day Returns for defective items.
                   </p>
                 </div>
               </div>

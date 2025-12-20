@@ -65,10 +65,10 @@ class ReturnRequestCreateSerializer(serializers.Serializer):
         if order.status != 'DELIVERED':
             raise serializers.ValidationError("Can only return delivered orders")
         
-        # Check return window (7 days)
+        # Check return window (3 days)
         days_since_delivery = (timezone.now() - order.updated_at).days
-        if days_since_delivery > 7:
-            raise serializers.ValidationError("Return window expired (7 days from delivery)")
+        if days_since_delivery > 3:
+            raise serializers.ValidationError("Return window expired (3 days from delivery)")
         
         # Check if already returned
         existing_return = ReturnRequest.objects.filter(
@@ -88,6 +88,12 @@ class ReturnRequestCreateSerializer(serializers.Serializer):
                 raise serializers.ValidationError({
                     "images": "Please provide images or video as evidence for defective/wrong items"
                 })
+        # Require a concise description for any return
+        desc = attrs.get('description', '')
+        if not desc or len(desc.strip()) < 10:
+            raise serializers.ValidationError({
+                "description": "Please provide a brief reason (at least 10 characters) explaining why you want to return this item"
+            })
         
         # Validate exchange product
         if attrs['request_type'] == 'EXCHANGE':

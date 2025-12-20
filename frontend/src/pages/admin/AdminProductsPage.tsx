@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Trash2, ExternalLink } from 'lucide-react';
 import apiClient from '../../lib/apiClient';
+import { productAPI } from '../../services/api';
 
 const AdminProductsPage: React.FC = () => {
   const [products, setProducts] = useState<any[]>([]);
@@ -10,11 +11,16 @@ const AdminProductsPage: React.FC = () => {
     fetchProducts();
   }, []);
 
-  const fetchProducts = () => {
-    apiClient.get('/catalog/products/')
-      .then(res => setProducts(res.data.results))
-      .catch(console.error)
-      .finally(() => setLoading(false));
+  const fetchProducts = async () => {
+    try {
+      const res = await productAPI.list();
+      const results = res && res.data && Array.isArray(res.data.results) ? res.data.results : [];
+      setProducts(results);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async (slug: string) => {

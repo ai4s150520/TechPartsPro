@@ -1,11 +1,13 @@
-import React from 'react';
-import SellerRegisterForm from '../../components/forms/RegisterForm'; // Reusing generic form
+import SellerRegisterForm from '../../components/forms/RegisterForm';
+import SellerHeader from '../../components/layout/SellerHeader'; // Reusing generic form
 import { useNavigate } from 'react-router-dom';
 
 const SellerRegisterPage: React.FC = () => {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4">
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <SellerHeader />
+      <div className="flex-grow flex items-center justify-center py-12 px-4">
       <div className="max-w-2xl w-full bg-white p-8 rounded-xl shadow-lg border border-orange-100">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900">Seller Registration</h2>
@@ -15,6 +17,7 @@ const SellerRegisterPage: React.FC = () => {
         <SellerRegisterForm onSuccess={() => navigate('/seller/login')} isSeller={true} />
       </div>
     </div>
+  </div>
   );
 };
 

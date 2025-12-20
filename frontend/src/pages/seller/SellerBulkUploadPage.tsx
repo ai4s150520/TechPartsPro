@@ -26,6 +26,8 @@ const SellerBulkUploadPage: React.FC = () => {
     
     setUploading(true);
     setReport(null);
+    // initialize progress so UI can show percentage immediately
+    setProgress({ current: 0, total: 10000 });
     const formData = new FormData();
     formData.append('file', file);
 
@@ -64,9 +66,8 @@ const SellerBulkUploadPage: React.FC = () => {
     const interval = setInterval(async () => {
       try {
         const { data } = await apiClient.get(`/catalog/products/bulk-upload/status/${taskId}/`);
-        
         if (data.state === 'PROGRESS') {
-          setProgress({ current: data.current, total: data.total });
+          setProgress({ current: data.current || 0, total: data.total || 10000 });
         } else if (data.state === 'SUCCESS') {
           setReport(data.result);
           setUploading(false);
@@ -74,7 +75,8 @@ const SellerBulkUploadPage: React.FC = () => {
           toast.success('Upload completed!');
           clearInterval(interval);
         } else if (data.state === 'FAILURE') {
-          toast.error('Upload failed');
+          const msg = data.status || (data.result && data.result.error) || 'Upload failed';
+          toast.error(msg);
           setUploading(false);
           setTaskId(null);
           clearInterval(interval);
@@ -148,16 +150,21 @@ const SellerBulkUploadPage: React.FC = () => {
           <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">Please complete your seller profile (bank details / email) before bulk uploading. <a href="/seller/profile" className="underline font-medium">Complete profile</a></div>
         )}
 
-        {uploading && progress.total > 0 && (
+        {uploading && (
           <div className="mb-4">
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>Processing...</span>
-              <span>{progress.current} / {progress.total}</span>
+            <div className="flex justify-between items-center text-sm text-gray-600 mb-2">
+              <div className="flex items-center gap-3">
+                <span>Processing...</span>
+                {progress.total > 0 && (
+                  <span className="text-xs text-gray-500">{Math.round((progress.current / progress.total) * 100)}%</span>
+                )}
+              </div>
+              <span className="text-xs text-gray-500">{progress.current} / {progress.total}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
                 className="bg-blue-600 h-2 rounded-full transition-all"
-                style={{ width: `${(progress.current / progress.total) * 100}%` }}
+                style={{ width: `${progress.total > 0 ? (progress.current / progress.total) * 100 : 0}%` }}
               />
             </div>
           </div>

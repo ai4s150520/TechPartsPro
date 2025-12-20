@@ -23,9 +23,9 @@ export const validators = {
   // 3. Phone Number (Indian Format Support: +91 or 10 digits)
   phone: (phone: string): boolean => {
     // Allows: 9876543210, +919876543210, 987-654-3210
-    const re = /^(\+91[\-\s]?)?[0]?(91)?[6789]\d{9}$/;
-    // Ideally use a loose check for global apps, strict for local
-    return phone.length >= 10 && phone.length <= 15;
+    const re = /^(\+91[-\s]?)?[0]?(91)?[6789]\d{9}$/;
+    // Use regex test for validation
+    return re.test(phone);
   },
 
   // 4. GST Number (Indian Tax ID)

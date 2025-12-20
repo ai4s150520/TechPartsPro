@@ -21,9 +21,7 @@ const ProductsPage: React.FC = () => {
   const { data, isLoading } = useProducts(filters);
   const products = data?.results || [];
   
-  React.useEffect(() => {
-    // Debug logs removed for production
-  }, [filters, products]);
+  // No side-effects required here; remove empty effect to avoid lint warnings
 
   const handleFilterChange = (newFilters: typeof filters) => {
     setFilters(newFilters);

@@ -19,9 +19,12 @@ class OrderAdmin(admin.ModelAdmin):
 
     @admin.action(description='Mark selected orders as Processing')
     def mark_as_processing(self, request, queryset):
-        queryset.update(status=Order.Status.PROCESSING)
+        for order in queryset:
+            order.status = Order.Status.PROCESSING
+            order.save()
 
     @admin.action(description='Mark selected orders as Shipped')
     def mark_as_shipped(self, request, queryset):
-        # In a real app, you might trigger an email here
-        queryset.update(status=Order.Status.SHIPPED)
+        for order in queryset:
+            order.status = Order.Status.SHIPPED
+            order.save()

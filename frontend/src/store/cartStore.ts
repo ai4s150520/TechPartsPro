@@ -33,7 +33,7 @@ interface CartStore {
   clearCart: () => void;
 }
 
-export const useCartStore = create<CartStore>((set, get) => ({
+export const useCartStore = create<CartStore>((set) => ({
   cart: null,
   cartCount: 0,
   isLoading: false,
@@ -59,7 +59,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
       });
       set({ cart: data, cartCount: data.total_items || 0 });
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to add item to cart', error);
       throw error;
     }
@@ -70,7 +70,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
       const { data } = await apiClient.patch(`/cart/item/${itemId}/`, { quantity });
       set({ cart: data, cartCount: data.total_items || 0 });
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to update cart item quantity', error);
       throw error;
     }
@@ -81,7 +81,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
       const { data } = await apiClient.delete(`/cart/item/${itemId}/`);
       set({ cart: data, cartCount: data.total_items || 0 });
       return data;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to remove cart item', error);
       throw error;
     }

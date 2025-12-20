@@ -1,34 +1,39 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { TrendingUp, Users, DollarSign, ShieldCheck } from 'lucide-react';
+import { TrendingUp, Users, DollarSign } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import Footer from '../../components/layout/Footer';
+import SellerHeader from '../../components/layout/SellerHeader';
 
 const SellOnlinePage: React.FC = () => {
   return (
     <div className="bg-white min-h-screen flex flex-col">
-      {/* Hero */}
-      <header className="bg-slate-900 text-white pt-6 pb-20">
-        <nav className="container mx-auto px-6 flex justify-between items-center mb-16">
-          <Link to="/" className="text-2xl font-bold">TechParts<span className="text-blue-500">Pro</span></Link>
-          <div className="space-x-4">
-            <Link to="/auth/login" className="text-gray-300 hover:text-white font-medium">Customer Login</Link>
-            <Link to="/seller/login" className="text-orange-400 hover:text-orange-300 font-medium">Seller Login</Link>
-          </div>
-        </nav>
+      <SellerHeader />
         
-        <div className="container mx-auto px-6 flex flex-col md:flex-row items-center">
+        <div className="container mx-auto px-6 flex flex-col md:flex-row items-center py-20">
           <div className="md:w-1/2 mb-10 md:mb-0">
             <span className="text-orange-500 font-bold tracking-wider uppercase text-sm">For Suppliers & Distributors</span>
             <h1 className="text-4xl md:text-6xl font-extrabold mt-4 mb-6 leading-tight">
               Scale Your Parts Business <span className="text-orange-500">Online</span>
             </h1>
-            <p className="text-lg text-gray-400 mb-8 max-w-lg">
+            <p className="text-lg text-gray-600 mb-8 max-w-lg">
               Join the largest marketplace for mobile spare parts. Reach 50,000+ repair shops and technicians instantly.
             </p>
-            <Link to="/seller/register">
-              <Button size="lg" variant="seller" className="px-8 py-4 text-lg">Start Selling Today</Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link to="/seller/login">
+                <Button size="lg" variant="outline" className="px-8 py-4 text-lg border-2 border-orange-500 text-orange-500 hover:bg-orange-50">
+                  Seller Login
+                </Button>
+              </Link>
+              <Link to="/seller/register">
+                <Button size="lg" variant="seller" className="px-8 py-4 text-lg">
+                  Start Selling Today
+                </Button>
+              </Link>
+            </div>
+            <p className="text-sm text-gray-400 mt-4">
+              New to selling? Sign up now • Already a seller? Login to your account
+            </p>
           </div>
           <div className="md:w-1/2 flex justify-center">
             <img 
@@ -38,7 +43,6 @@ const SellOnlinePage: React.FC = () => {
             />
           </div>
         </div>
-      </header>
 
       {/* Features */}
       <section className="py-20 bg-gray-50">

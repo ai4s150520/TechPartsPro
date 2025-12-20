@@ -13,6 +13,10 @@ const OrderDetailPage: React.FC = () => {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showReturnModal, setShowReturnModal] = useState(false);
+  const [returnReason, setReturnReason] = useState<string>('DEFECTIVE');
+  const [returnDescription, setReturnDescription] = useState<string>('');
+  const [returnImages, setReturnImages] = useState<File[]>([]);
+  const [returnError, setReturnError] = useState<string | null>(null);
 
   useEffect(() => {
     apiClient.get(`/orders/${id}/`)
@@ -87,49 +91,88 @@ const OrderDetailPage: React.FC = () => {
                     <div className="fixed inset-0 z-50 flex items-center justify-center">
                       <div className="absolute inset-0 bg-black opacity-40" onClick={() => setShowReturnModal(false)} />
                       <div className="relative bg-white rounded-lg shadow-lg p-6 w-full max-w-md z-10">
-                        <h3 className="text-lg font-bold mb-3">Return Options</h3>
-                        <p className="text-sm text-gray-600 mb-4">Choose how you'd like to proceed for this order.</p>
-                        <div className="flex gap-3">
-                          <button
-                            onClick={async () => {
-                              if (!confirm('Create a replacement order for these items?')) return;
-                              try {
-                                const resp = await orderAPI.replace(order.id);
-                                toast.success('Replacement order created');
-                                setShowReturnModal(false);
-                                if (resp.data?.payment_required) {
-                                  window.location.href = `/account/orders/${resp.data.new_order_id}`;
-                                } else {
-                                  window.location.reload();
-                                }
-                              } catch (err: any) {
-                                toast.error(err?.response?.data?.error || 'Failed to create replacement order');
-                              }
-                            }}
-                            className="flex-1 px-3 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
-                          >
-                            Replace
-                          </button>
+                        <h3 className="text-lg font-bold mb-3">Request Return / Exchange</h3>
+                        <p className="text-sm text-gray-600 mb-4">Returns accepted within 3 days of delivery. Please provide a reason and brief description (min 10 characters).</p>
 
-                          <button
-                            onClick={async () => {
-                              if (!confirm('Request a refund for this order?')) return;
+                        {/* Check return window */}
+                        {(() => {
+                          const deliveredAt = new Date(order.updated_at);
+                          const now = new Date();
+                          const diffDays = Math.floor((now.getTime() - deliveredAt.getTime()) / (1000 * 60 * 60 * 24));
+                          if (diffDays > 3) {
+                            return (
+                              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 mb-4">
+                                Return window (3 days) has expired for this order. If you think this is an error, contact support.
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Reason</label>
+                            <select value={returnReason} onChange={(e) => setReturnReason(e.target.value)} className="mt-1 block w-full border rounded px-3 py-2">
+                              <option value="DEFECTIVE">Defective / Damaged</option>
+                              <option value="WRONG_ITEM">Wrong Item Received</option>
+                              <option value="NOT_AS_DESCRIBED">Not as Described</option>
+                              <option value="SIZE_ISSUE">Size / Fit Issue</option>
+                              <option value="CHANGED_MIND">Changed Mind</option>
+                              <option value="OTHER">Other</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Description</label>
+                            <textarea value={returnDescription} onChange={(e) => setReturnDescription(e.target.value)} rows={4} className="mt-1 block w-full border rounded px-3 py-2" />
+                            <p className="text-xs text-gray-500 mt-1">Minimum 10 characters.</p>
+                          </div>
+
+                          {(returnReason === 'DEFECTIVE' || returnReason === 'WRONG_ITEM' || returnReason === 'NOT_AS_DESCRIBED') && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700">Upload evidence (images)</label>
+                              <input type="file" accept="image/*" multiple onChange={(e) => {
+                                const files = e.target.files ? Array.from(e.target.files) : [];
+                                setReturnImages(files);
+                              }} className="mt-1" />
+                              <p className="text-xs text-gray-500 mt-1">Please upload one or more images showing the issue.</p>
+                            </div>
+                          )}
+
+                          {returnError && <div className="text-sm text-red-600">{returnError}</div>}
+
+                          <div className="flex gap-2 mt-2">
+                            <button onClick={async () => {
+                              // Validate
+                              setReturnError(null);
+                              const deliveredAt = new Date(order.updated_at);
+                              const now = new Date();
+                              const diffDays = Math.floor((now.getTime() - deliveredAt.getTime()) / (1000 * 60 * 60 * 24));
+                              if (diffDays > 3) { setReturnError('Return window (3 days) has expired'); return; }
+                              if (!returnDescription || returnDescription.trim().length < 10) { setReturnError('Please provide a description (at least 10 characters)'); return; }
+                              if ((returnReason === 'DEFECTIVE' || returnReason === 'WRONG_ITEM' || returnReason === 'NOT_AS_DESCRIBED') && returnImages.length === 0) { setReturnError('Please upload images as evidence for this reason'); return; }
+
+                              // Build payload
+                              const items = order.items.map((it: any) => ({ order_item_id: it.id, quantity: it.quantity }));
+
                               try {
-                                await orderAPI.refund(order.id);
-                                toast.success('Refund initiated');
+                                await import('../../services/api').then(mod => mod.returnAPI.create({
+                                  order_id: order.order_id,
+                                  items,
+                                  reason: returnReason,
+                                  description: returnDescription,
+                                  images: returnImages,
+                                }));
+                                toast.success('Return request submitted');
                                 setShowReturnModal(false);
                                 window.location.reload();
                               } catch (err: any) {
-                                toast.error(err?.response?.data?.error || 'Failed to initiate refund');
+                                setReturnError(err?.response?.data?.error || 'Failed to submit return request');
                               }
-                            }}
-                            className="flex-1 px-3 py-2 rounded border border-red-300 text-red-600 bg-white hover:bg-red-50"
-                          >
-                            Refund
-                          </button>
-                        </div>
-                        <div className="text-right mt-4">
-                          <button onClick={() => setShowReturnModal(false)} className="text-sm text-gray-500">Close</button>
+                            }} className="px-4 py-2 rounded bg-blue-600 text-white">Submit Request</button>
+
+                            <button onClick={() => setShowReturnModal(false)} className="px-4 py-2 rounded border">Cancel</button>
+                          </div>
                         </div>
                       </div>
                     </div>

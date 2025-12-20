@@ -74,18 +74,20 @@ const SellerDashboardPage: React.FC = () => {
       <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
       
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {cards.map((card) => (
-          <div key={card.label} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center">
-            <div className={`p-3 rounded-lg mr-4 text-white shadow-lg ${card.color}`}>
-              <card.icon className="w-6 h-6" />
+          <div key={card.label} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6 flex items-center min-w-0">
+            <div className={`p-2 md:p-3 rounded-lg mr-3 md:mr-4 text-white shadow-lg shrink-0 ${card.color}`}>
+              <card.icon className="w-5 h-5 md:w-6 h-6" />
             </div>
-            <div>
-              <p className="text-sm text-gray-500 font-medium">{card.label}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs md:text-sm text-gray-500 font-medium truncate">{card.label}</p>
               {loading ? (
-                <div className="h-7 w-24 bg-gray-200 animate-pulse rounded mt-1"></div>
+                <div className="h-7 w-20 md:w-24 bg-gray-200 animate-pulse rounded mt-1"></div>
               ) : (
-                <p className="text-2xl font-bold text-gray-900">{card.value}</p>
+                <p className="text-lg md:text-2xl font-bold text-gray-900 truncate" title={card.value.toString()}>
+                  {card.value}
+                </p>
               )}
             </div>
           </div>

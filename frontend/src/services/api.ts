@@ -4,7 +4,6 @@ import type {
   Product,
   Category,
   Cart,
-  CartItem,
   Order,
   Address,
   Review,
@@ -46,7 +45,13 @@ export const authAPI = {
 // ==================== PRODUCTS ====================
 export const productAPI = {
   list: (params?: { category?: string; search?: string; min_price?: number; max_price?: number; page?: number; ordering?: string }) =>
-    apiClient.get<{ results: Product[]; count: number }>('/catalog/products/', { params }),
+    apiClient.get('/catalog/products/', { params }).then(res => {
+      const d = res.data;
+      // Normalize paginated and non-paginated responses
+      const results = d && (d.results || Array.isArray(d) ? (d.results || d) : []);
+      const count = d && (d.count || (Array.isArray(d) ? d.length : (results ? results.length : 0)));
+      return { data: { results, count } } as any;
+    }),
   
   get: (slug: string) =>
     apiClient.get<Product>(`/catalog/products/${slug}/`),
@@ -75,7 +80,11 @@ export const productAPI = {
 
 // ==================== CATEGORIES ====================
 export const categoryAPI = {
-  list: () => apiClient.get<Category[]>('/catalog/categories/'),
+  list: () => apiClient.get('/catalog/categories/').then(res => {
+    const d = res.data;
+    const results = d && (d.results || Array.isArray(d) ? (d.results || d) : []);
+    return { data: { results } } as any;
+  }),
   get: (id: number) => apiClient.get<Category>(`/catalog/categories/${id}/`),
 };
 
@@ -225,14 +234,21 @@ export const returnAPI = {
   get: (id: number) =>
     apiClient.get<ReturnRequest>(`/returns/${id}/`),
   
-  create: (data: { order_item_id: number; reason: string; description: string; images?: File[] }) => {
+  create: (data: { order_id: string; items: Array<{ order_item_id: number; quantity?: number; reason?: string }>; request_type?: string; reason: string; description: string; images?: File[]; video_url?: string }) => {
     const formData = new FormData();
-    formData.append('order_item_id', data.order_item_id.toString());
+    formData.append('order_id', data.order_id.toString());
+    formData.append('request_type', data.request_type || 'RETURN');
     formData.append('reason', data.reason);
     formData.append('description', data.description);
+    if (data.video_url) formData.append('video_url', data.video_url);
+
+    // Items list as JSON string
+    formData.append('items', JSON.stringify(data.items || []));
+
     if (data.images) {
-      data.images.forEach((img, idx) => formData.append(`image_${idx}`, img));
+      data.images.forEach((img) => formData.append('images', img));
     }
+
     return apiClient.post<ReturnRequest>('/returns/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });

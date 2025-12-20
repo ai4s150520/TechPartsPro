@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 // --- LAYOUTS ---
@@ -64,7 +63,7 @@ import TermsPage from './pages/legal/TermsPage';
 import PrivacyPage from './pages/legal/PrivacyPage';
 import RefundsPage from './pages/legal/RefundsPage';
 
-function App() {
+const App = () => {
   return (
     <Router>
       {/* Global Toast Notifications (Overlay) */}
@@ -75,6 +74,15 @@ function App() {
         {/* =========================================================
             GROUP 1: MAIN SITE LAYOUT (Header + Footer)
         ========================================================= */}
+        
+        {/* Seller Onboarding & Auth (Uses its own Header/Footer via components) */}
+        <Route path="/sell-online" element={<SellOnlinePage />} />
+        
+        <Route element={<PublicOnly />}>
+          <Route path="/seller/login" element={<SellerLoginPage />} />
+          <Route path="/seller/register" element={<SellerRegisterPage />} />
+        </Route>
+
         <Route path="/" element={<Layout />}>
           
           {/* 1.1 Public Routes */}
@@ -92,8 +100,6 @@ function App() {
           <Route path="legal/privacy" element={<PrivacyPage />} />
           <Route path="legal/returns" element={<RefundsPage />} />
 
-          {/* Seller Landing (Public) */}
-          <Route path="sell-online" element={<SellOnlinePage />} />
 
           {/* 1.2 Guest Only Routes (Login/Register) 
               Redirects to Dashboard if already logged in */}
@@ -103,10 +109,6 @@ function App() {
             <Route path="auth/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="auth/reset-password" element={<ResetPasswordPage />} />
             <Route path="verify-email" element={<VerifyEmailPage />} />
-            
-            {/* Seller Auth */}
-            <Route path="seller/login" element={<SellerLoginPage />} />
-            <Route path="seller/register" element={<SellerRegisterPage />} />
           </Route>
 
           {/* 1.3 Protected Customer Routes 
@@ -175,6 +177,6 @@ function App() {
       </Routes>
     </Router>
   );
-}
+};
 
 export default App;

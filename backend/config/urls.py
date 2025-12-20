@@ -20,10 +20,6 @@ urlpatterns = [
     # --- ADMIN INTERFACE ---
     path("admin/", admin.site.urls),
     
-    # --- CORE APPS ---
-    path('api/health/', include('core.urls')),
-    path("api/core/", include("core.urls")),
-
     # --- FUNCTIONAL APPS ---
     path("api/auth/", include("accounts.urls")),     # Login/Register
     path("api/accounts/", include("accounts.urls")), # User Profile/Addresses

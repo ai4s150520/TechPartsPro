@@ -31,7 +31,7 @@ const FAQS: FaqItem[] = [
     id: 4,
     category: 'Returns',
     question: "What is your return policy?",
-    answer: "We accept returns for defective items within 7 days of delivery. The item must be in original condition with the warranty seal intact. Please visit the Returns page to initiate a request."
+    answer: "We accept returns for defective items within 3 days of delivery. The item must be in original condition with the warranty seal intact. Please visit the Returns page to initiate a request."
   },
   {
     id: 5,

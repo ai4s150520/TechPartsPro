@@ -65,7 +65,18 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         </form>
 
         {/* Navigation Actions */}
-        <div className="flex items-center gap-1 sm:gap-4">
+        <div className="flex items-center gap-1 sm:gap-3">
+          
+          {/* Become a Seller Button - Only for Guests */}
+          {!isAuthenticated && (
+            <Link 
+              to="/sell-online" 
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium text-sm shadow-sm"
+            >
+              <Store className="w-4 h-4" />
+              <span>Become a Seller</span>
+            </Link>
+          )}
           
           {/* Customer Navigation */}
           {user?.role === 'CUSTOMER' && (
@@ -133,19 +144,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
               <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden ring-1 ring-black ring-opacity-5">
                 {!isAuthenticated ? (
                   <>
-                    <div className="p-4 border-b border-gray-100 bg-gray-50">
-                      <p className="text-xs font-bold text-gray-500 uppercase mb-2">Customers</p>
-                      <Link to="/auth/login" className="block w-full text-center py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-semibold shadow-sm mb-2">
-                        Login / Register
-                      </Link>
-                    </div>
                     <div className="p-4">
-                      <p className="text-xs font-bold text-gray-500 uppercase mb-2">Sellers</p>
-                      <Link to="/seller/login" className="block text-sm font-medium text-gray-700 hover:text-orange-600 mb-2">
-                        Seller Login
-                      </Link>
-                      <Link to="/seller/register" className="block w-full text-center py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-semibold shadow-sm">
-                        Register as Seller
+                      <Link to="/auth/login" className="block w-full text-center py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-semibold shadow-sm">
+                        Login / Register
                       </Link>
                     </div>
                   </>
