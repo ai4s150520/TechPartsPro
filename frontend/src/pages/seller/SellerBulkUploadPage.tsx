@@ -16,7 +16,24 @@ const SellerBulkUploadPage: React.FC = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      
+      // Validate file type
+      const allowedTypes = ['.csv', '.xlsx', '.xls'];
+      const fileExt = selectedFile.name.toLowerCase().substring(selectedFile.name.lastIndexOf('.'));
+      
+      if (!allowedTypes.includes(fileExt)) {
+        toast.error('Invalid file format. Please upload CSV or Excel files only.');
+        return;
+      }
+      
+      // Validate file size (50MB)
+      if (selectedFile.size > 50 * 1024 * 1024) {
+        toast.error('File too large. Maximum size is 50MB.');
+        return;
+      }
+      
+      setFile(selectedFile);
       setReport(null);
     }
   };
@@ -46,7 +63,7 @@ const SellerBulkUploadPage: React.FC = () => {
       if (data.task_id) {
         setTaskId(data.task_id);
         toast.success(data.message);
-      } else if (data.status === 'success') {
+      } else if (data.status === 'completed' || data.status === 'success') {
         // Synchronous response
         setReport(data);
         setUploading(false);
@@ -101,8 +118,8 @@ const SellerBulkUploadPage: React.FC = () => {
   }, []);
 
   const downloadTemplate = () => {
-    const headers = "Name,SKU,Category,MRP,Stock,GST_Percent,Discount_Percent,Brand,Image_URLs,Description";
-    const example = "Vivo V21 Screen,VIVO-V21-LCD,Screens,6000,50,18,10,Vivo,\"http://img.com/1.jpg, http://img.com/2.jpg\",Original Display";
+    const headers = "SKU,Name,Category,Brand,MRP,GST_Percent,Discount_Percent,Stock,Description,Image_URLs";
+    const example = "SKU00001,Motorola Edge LCD Display,LCD & OLED Displays,Vivo,4971,0,10,48,OEM equivalent quality,https://example.com/image1.jpg";
     const csvContent = "data:text/csv;charset=utf-8," + headers + "\n" + example;
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -127,9 +144,13 @@ const SellerBulkUploadPage: React.FC = () => {
         </div>
         
         <h3 className="text-lg font-medium text-gray-900 mb-2">Upload your Excel/CSV</h3>
-        <p className="text-gray-500 text-sm mb-6">
+        <p className="text-gray-500 text-sm mb-4">
           Supports .xlsx and .csv. Max 10,000 rows per file.
         </p>
+        <div className="text-xs text-gray-400 mb-6 bg-gray-50 p-3 rounded">
+          <strong>Required columns:</strong> SKU, Name, Category, MRP<br/>
+          <strong>Optional columns:</strong> Brand, GST_Percent, Discount_Percent, Stock, Description, Image_URLs
+        </div>
 
         <div className="flex justify-center mb-6">
           <input 
@@ -206,8 +227,11 @@ const SellerBulkUploadPage: React.FC = () => {
               <h4 className="text-sm font-bold text-red-800 mb-2 flex items-center">
                 <AlertCircle className="w-4 h-4 mr-2" /> Errors Found ({report.errors.length})
               </h4>
+              <div className="text-xs text-red-600 mb-2">
+                Showing first {Math.min(report.errors.length, 100)} errors
+              </div>
               <ul className="list-disc pl-5 space-y-1">
-                {report.errors.map((err, idx) => (
+                {report.errors.slice(0, 100).map((err, idx) => (
                   <li key={idx} className="text-sm text-red-700">{err}</li>
                 ))}
               </ul>

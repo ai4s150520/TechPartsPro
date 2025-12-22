@@ -51,13 +51,18 @@ class ProductViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
+        
+        logger.info(f"ProductViewSet.get_queryset - User: {user}, Role: {getattr(user, 'role', 'None')}, Authenticated: {user.is_authenticated}")
 
         if user.is_staff or (user.is_authenticated and user.role == 'ADMIN'):
+            logger.info("Returning all products for admin/staff")
             return queryset
 
         # Sellers can only access their own products
         if user.is_authenticated and user.role == 'SELLER':
-            return queryset.filter(seller=user)
+            seller_products = queryset.filter(seller=user)
+            logger.info(f"Returning seller products for user {user.id}")
+            return seller_products
         
         # Regular customers see only active products
         queryset = queryset.filter(is_active=True)
@@ -67,6 +72,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         if category_slug:
             queryset = queryset.filter(category__slug=category_slug)
         
+        logger.info(f"Returning active products for customer/anonymous")
         return queryset
 
     def get_serializer_class(self):
@@ -138,10 +144,33 @@ class BulkUploadProductsView(APIView):
             return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            # Validate file extension
+            allowed_extensions = ['.csv', '.xlsx', '.xls']
+            file_ext = os.path.splitext(file_obj.name)[1].lower()
+            if file_ext not in allowed_extensions:
+                return Response({"error": "Invalid file format. Only CSV and Excel files are supported."}, status=status.HTTP_400_BAD_REQUEST)
+            
             # Validate file size (max 50MB)
             if file_obj.size > 50 * 1024 * 1024:
                 return Response({"error": "File too large. Max 50MB"}, status=status.HTTP_400_BAD_REQUEST)
 
+            # Quick validation of CSV headers
+            if file_ext == '.csv':
+                try:
+                    # Read first few lines to validate headers
+                    file_obj.seek(0)
+                    first_line = file_obj.readline().decode('utf-8').strip()
+                    headers = [h.strip().lower() for h in first_line.split(',')]
+                    required_headers = ['sku', 'name', 'category', 'mrp']
+                    missing_headers = [h for h in required_headers if h not in headers]
+                    if missing_headers:
+                        return Response({
+                            "error": f"Missing required columns: {', '.join(missing_headers)}. Please check your CSV format."
+                        }, status=status.HTTP_400_BAD_REQUEST)
+                    file_obj.seek(0)  # Reset file pointer
+                except Exception as e:
+                    return Response({"error": "Could not validate CSV headers"}, status=status.HTTP_400_BAD_REQUEST)
+            
             # Save file to media storage for background processing
             upload_dir = 'bulk_uploads'
             filename = f"{uuid.uuid4().hex}_{file_obj.name}"
@@ -179,18 +208,37 @@ class BulkUploadProductsView(APIView):
                 row_count = None
 
             # Enqueue Celery task to process the saved file asynchronously
-            task = process_bulk_upload.delay(fs_path, request.user.id)
-
-            # Return saved storage path and detected row_count for accurate frontend progress
-            resp = {
-                "task_id": task.id,
-                "saved_path": saved_path,
-                "message": "File accepted and queued for processing. You will be notified when complete."
-            }
-            if row_count is not None:
-                resp['row_count'] = int(row_count)
-
-            return Response(resp, status=status.HTTP_202_ACCEPTED)
+            # Add fallback for development when Celery worker might not be running
+            task = None
+            try:
+                from django.conf import settings
+                if settings.DEBUG:
+                    # In debug mode, process synchronously. Call the task's bound `run`
+                    # method so the `self` (task instance) is provided correctly.
+                    result = process_bulk_upload.run(fs_path, request.user.id)
+                    return Response({
+                        "status": "completed",
+                        "message": "File processed successfully",
+                        **result
+                    }, status=status.HTTP_200_OK)
+                else:
+                    # Production: use async processing
+                    task = process_bulk_upload.delay(fs_path, request.user.id)
+                    logger.info(f"Celery task queued: {task.id}")
+                    
+                    # Return response for async processing
+                    resp = {
+                        "task_id": task.id,
+                        "saved_path": saved_path,
+                        "message": "File accepted and queued for processing."
+                    }
+                    if row_count is not None:
+                        resp['row_count'] = int(row_count)
+                    return Response(resp, status=status.HTTP_202_ACCEPTED)
+                    
+            except Exception as e:
+                logger.error(f"Processing failed: {e}")
+                return Response({"error": f"Processing failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         except Exception as e:
             logger.exception("Failed to accept bulk upload")
@@ -204,7 +252,12 @@ class BulkUploadStatusView(APIView):
     def get(self, request, task_id):
         from celery.result import AsyncResult
         
-        task = AsyncResult(task_id)
+        try:
+            task = AsyncResult(task_id)
+            logger.info(f"Checking task {task_id}: state={task.state}, info={task.info}")
+        except Exception as e:
+            logger.error(f"Error checking task {task_id}: {e}")
+            return Response({'error': 'Task lookup failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # task.info may be None for PENDING or on some broker configurations.
         info = task.info or {}

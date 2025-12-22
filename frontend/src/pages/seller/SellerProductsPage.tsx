@@ -16,14 +16,16 @@ const SellerProductsPage: React.FC = () => {
   const location = useLocation(); // Track route changes
 
   const fetchProducts = async () => {
-    setLoading(true); // Show loading state during refresh
+    setLoading(true);
     try {
-      // use centralized productAPI which normalizes paginated/non-paginated shapes
-      const res = await productAPI.list();
+      // Use seller-specific endpoint that returns only seller's products
+      const res = await apiClient.get('/catalog/products/');
+      console.log('Products API response:', res.data); // Debug log
       const results = res && res.data && Array.isArray(res.data.results) ? res.data.results : [];
+      console.log('Processed results:', results); // Debug log
       setProducts(results);
     } catch (error) {
-      console.error(error);
+      console.error('Error fetching products:', error);
     } finally {
       setLoading(false);
     }
