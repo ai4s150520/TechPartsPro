@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, Check, Package, ShoppingCart, AlertCircle, Info } from 'lucide-react';
+import { Bell, Check, AlertCircle, Info } from 'lucide-react';
 import apiClient from '../../lib/apiClient';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -17,7 +17,6 @@ const NotificationDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(false);
 
   const fetchNotifications = async () => {
     try {

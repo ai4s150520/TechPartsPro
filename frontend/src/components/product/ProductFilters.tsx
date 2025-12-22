@@ -2,16 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { Search, Filter, X } from 'lucide-react';
 import apiClient from '../../lib/apiClient';
 
+interface ProductFilters {
+  page: number;
+  search: string;
+  category: string;
+  min_price: string;
+  max_price: string;
+  ordering: string;
+}
+
 interface ProductFiltersProps {
-  filters: any;
-  setFilters: (filters: any) => void;
+  filters: ProductFilters;
+  setFilters: (filters: ProductFilters) => void;
   className?: string;
 }
 
 const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, setFilters, className }) => {
   // Data State
   const [categories, setCategories] = useState<{id: number, slug: string, name: string}[]>([]);
-  const [brands, setBrands] = useState<{id: number, slug: string, name: string}[]>([]);
   
   // Mobile Open State
   const [isOpen, setIsOpen] = useState(false);
@@ -20,12 +28,8 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, setFilters, cl
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [catRes, brandRes] = await Promise.all([
-          apiClient.get('/catalog/categories/'),
-          apiClient.get('/catalog/brands/')
-        ]);
+        const catRes = await apiClient.get('/catalog/categories/');
         setCategories(Array.isArray(catRes.data) ? catRes.data : (catRes.data.results || []));
-        setBrands(Array.isArray(brandRes.data) ? brandRes.data : (brandRes.data.results || []));
       } catch (error) {
         console.error("Filter data load error", error);
       }

@@ -30,12 +30,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
     };
   }, [isOpen, onClose]);
 
-  // 2. Handle Backdrop Click
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-      onClose();
-    }
-  };
+  // 2. Handle Backdrop Click (removed unused function)
 
   if (!isOpen) return null;
 

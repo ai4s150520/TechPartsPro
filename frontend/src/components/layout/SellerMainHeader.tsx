@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, LogOut, User, Search, Package, BarChart3, Store, Home } from 'lucide-react';
+import { Menu, LogOut, User, Search, Package, BarChart3, Home } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import NotificationDropdown from '../ui/NotificationDropdown';
 

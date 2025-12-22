@@ -7,6 +7,23 @@ import { useAddToCart } from "../../hooks/useCart";
 import { useToggleWishlist, useCheckWishlist } from "../../hooks/useWishlist";
 import { formatPrice, getImageUrl } from "../../lib/utils";
 
+interface WishlistResponse {
+  data?: {
+    is_wishlisted?: boolean;
+    action?: string;
+  };
+  is_wishlisted?: boolean;
+  action?: string;
+}
+
+interface ErrorResponse {
+  response?: {
+    data?: Record<string, unknown>;
+    status?: number;
+  };
+  message?: string;
+}
+
 export type ProductSummary = {
   id: number;
   name: string;
@@ -36,13 +53,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     // Defensive: some hooks return { data: ... } others return plain boolean - adapt safely
     if (wishlistCheck) {
       // If your hook returns { data: { is_wishlisted: true } }:
-      if ((wishlistCheck as any)?.data?.is_wishlisted !== undefined) {
-        setIsWishlisted((wishlistCheck as any).data.is_wishlisted);
+      if ((wishlistCheck as WishlistResponse)?.data?.is_wishlisted !== undefined) {
+        setIsWishlisted((wishlistCheck as WishlistResponse).data!.is_wishlisted!);
         return;
       }
       // If your hook returns { is_wishlisted: true }:
-      if ((wishlistCheck as any)?.is_wishlisted !== undefined) {
-        setIsWishlisted((wishlistCheck as any).is_wishlisted);
+      if ((wishlistCheck as WishlistResponse)?.is_wishlisted !== undefined) {
+        setIsWishlisted((wishlistCheck as WishlistResponse).is_wishlisted!);
         return;
       }
       // If hook returns boolean directly:
@@ -82,12 +99,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
     addToCart({ product_id: product.id, quantity: 1 }, {
       onSuccess: () => toast.success(`${product.name} added to cart!`),
-      onError: (err: any) => {
+      onError: (err: ErrorResponse) => {
         if (err?.response?.status === 401) {
           toast.error("Please login to add items to cart");
           navigate("/auth/login", { state: { from: window.location.pathname } });
         } else {
-          toast.error(err?.response?.data?.error || "Failed to add to cart");
+          toast.error((err?.response?.data as { error?: string })?.error || "Failed to add to cart");
         }
       }
     });
@@ -104,7 +121,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
     // Call mutation with callbacks
     toggleWishlist(product.id, {
-      onSuccess: (response: any) => {
+      onSuccess: (response: WishlistResponse) => {
         // Expecting response.data.action = 'added' | 'removed'
         const action = (response?.data?.action ?? response?.action) as string | undefined;
         if (action) {
@@ -115,7 +132,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           setIsWishlisted((prev) => !prev);
         }
       },
-      onError: (error: any) => {
+      onError: (error: ErrorResponse) => {
         if (error?.response?.status === 401) {
           toast.error("Please login to manage wishlist");
           navigate("/auth/login", { state: { from: window.location.pathname } });

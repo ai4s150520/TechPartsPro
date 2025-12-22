@@ -5,7 +5,6 @@ import {
   Package, 
   ShoppingBag, 
   Wallet, 
-  Settings, 
   LogOut,
   ChevronRight,
   X,

@@ -11,7 +11,6 @@ interface Category {
 
 const CategoryBar: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Ideally, cache this or use React Query
@@ -23,14 +22,10 @@ const CategoryBar: React.FC = () => {
         setCategories(topLevel);
       } catch (err) {
         console.error("Failed to load categories", err);
-      } finally {
-        setLoading(false);
       }
     };
     fetchCategories();
   }, []);
-
-  if (loading) return null; // Or a skeleton
 
   return (
     <div className="bg-white border-b border-gray-200 shadow-sm hidden md:block">
