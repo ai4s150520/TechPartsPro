@@ -1,0 +1,529 @@
+ECOMMERCE MARKETPLACE - COMPLETE PROJECT DOCUMENTATION
+=====================================================
+
+TABLE OF CONTENTS
+==================
+1. PROJECT OVERVIEW
+2. ARCHITECTURE & TECH STACK
+3. BACKEND SYSTEM DESIGN
+4. FRONTEND APPLICATION
+5. DATABASE DESIGN
+6. API ENDPOINTS
+7. AUTHENTICATION & AUTHORIZATION
+8. PAYMENT SYSTEM
+9. ORDER MANAGEMENT
+10. MULTI-VENDOR SYSTEM
+11. DEPLOYMENT & DEVOPS
+12. TESTING STRATEGY
+13. SECURITY FEATURES
+14. PERFORMANCE OPTIMIZATION
+15. MONITORING & LOGGING
+
+1. PROJECT OVERVIEW
+===================
+
+The E-Commerce Marketplace is a production-ready, full-stack multi-vendor platform built with Django REST Framework and React. It enables multiple sellers to list products while providing customers with a seamless shopping experience.
+
+KEY FEATURES:
+- Multi-vendor marketplace with seller onboarding
+- Complete product catalog management
+- Shopping cart and checkout system
+- Multiple payment options (Razorpay, COD, Wallet)
+- Order management and tracking
+- Digital wallet system for refunds
+- Review and rating system
+- Real-time notifications
+- Bulk product upload via CSV/Excel
+- Advanced search and filtering
+- Mobile-responsive design
+- Admin dashboard for platform management
+
+TARGET USERS:
+- Customers: Browse and purchase products
+- Sellers: Manage inventory and fulfill orders
+- Administrators: Oversee platform operations
+
+2. ARCHITECTURE & TECH STACK
+=============================
+
+BACKEND ARCHITECTURE:
+- Framework: Django 6.0 + Django REST Framework 3.16
+- Database: PostgreSQL 15 (Production) / SQLite (Development)
+- Cache: Redis 7 for session storage and caching
+- Task Queue: Celery with Redis broker for background tasks
+- WebSocket: Django Channels for real-time features
+- Authentication: JWT with refresh tokens + 2FA support
+- API Documentation: DRF Spectacular (OpenAPI/Swagger)
+
+FRONTEND ARCHITECTURE:
+- Framework: React 19 with TypeScript
+- Build Tool: Vite 6.4 for fast development
+- State Management: Zustand + TanStack Query for server state
+- Styling: Tailwind CSS 3.4 for utility-first styling
+- Animations: Framer Motion for smooth interactions
+- Forms: React Hook Form + Zod validation
+- Routing: React Router v6
+
+EXTERNAL INTEGRATIONS:
+- Payment Gateway: Razorpay (Test & Production modes)
+- Shipping: Shiprocket API for logistics
+- Email: SMTP with async delivery via Celery
+- File Storage: Local filesystem + AWS S3 support
+- Search: Elasticsearch (optional)
+
+DEVOPS & INFRASTRUCTURE:
+- Containerization: Docker + Docker Compose
+- Web Server: Nginx with rate limiting
+- CI/CD: GitHub Actions with automated testing
+- Monitoring: Health checks and structured logging
+- Deployment: Production-ready with environment configs
+
+3. BACKEND SYSTEM DESIGN
+=========================
+
+DJANGO APPS STRUCTURE:
+
+accounts/
+- User management with custom User model
+- Role-based access (CUSTOMER, SELLER, ADMIN)
+- Seller profile with KYC verification
+- Address management
+- Two-factor authentication
+- Email verification system
+
+catalog/
+- Product management with categories and brands
+- Bulk upload functionality (CSV/Excel)
+- Product images with feature image support
+- Inventory tracking
+- Search and filtering capabilities
+- SEO-friendly slugs
+
+cart/
+- Session-based and user-based carts
+- Real-time price calculations
+- Tax and discount handling
+- Cart persistence across sessions
+
+orders/
+- Order creation from cart
+- Multi-seller order splitting
+- Order status tracking
+- Shipping integration
+- Order history and details
+
+payments/
+- Razorpay integration for online payments
+- COD (Cash on Delivery) support
+- Payment verification and webhooks
+- Refund processing
+- Transaction history
+
+wallet/
+- Digital wallet system for users
+- Credit/debit transactions
+- Refund handling
+- Withdrawal requests for sellers
+- Transaction history
+
+sellers/
+- Seller dashboard and analytics
+- Payout management
+- Commission calculations
+- Performance metrics
+
+shipping/
+- Shiprocket API integration
+- Shipping rate calculations
+- Tracking number generation
+- Delivery status updates
+
+reviews/
+- Product review and rating system
+- Verified purchase validation
+- Helpful votes
+- Image uploads with reviews
+
+notifications/
+- Real-time notification system
+- Email notifications
+- WebSocket support for live updates
+
+analytics/
+- Sales analytics and reporting
+- Revenue tracking
+- Performance metrics
+
+returns/
+- Return and exchange requests
+- Refund processing
+- Return tracking
+
+wishlist/
+- User wishlist functionality
+- Product saving and management
+
+coupons/
+- Discount coupon system
+- Percentage and fixed amount discounts
+- Usage limits and expiry
+
+4. FRONTEND APPLICATION
+=======================
+
+COMPONENT ARCHITECTURE:
+
+components/
+├── auth/          # Authentication guards and components
+├── cart/          # Shopping cart components
+├── checkout/      # Checkout process components
+├── forms/         # Reusable form components
+├── layout/        # Header, footer, sidebar components
+├── product/       # Product display and interaction
+├── seller/        # Seller-specific components
+└── ui/           # Reusable UI components
+
+pages/
+├── account/       # Customer account pages
+├── admin/         # Admin dashboard pages
+├── auth/          # Login/register pages
+├── seller/        # Seller portal pages
+└── shop/         # Shopping and product pages
+
+STATE MANAGEMENT:
+
+authStore (Zustand):
+- User authentication state
+- JWT token management
+- User profile information
+
+cartStore (Zustand):
+- Shopping cart state
+- Cart item management
+- Local storage persistence
+
+TanStack Query:
+- Server state management
+- API data caching
+- Background refetching
+- Optimistic updates
+
+ROUTING STRUCTURE:
+- Public routes: Home, products, auth
+- Protected routes: Account, cart, checkout
+- Seller routes: Dashboard, inventory, orders
+- Admin routes: Platform management
+
+5. DATABASE DESIGN
+==================
+
+CORE MODELS:
+
+User (Custom):
+- email (unique identifier)
+- role (CUSTOMER/SELLER/ADMIN)
+- profile information
+- verification status
+
+Product:
+- name, description, SKU
+- pricing and discount information
+- inventory tracking
+- seller relationship
+- category and brand associations
+
+Order:
+- user and seller relationships
+- order items with quantities
+- shipping address snapshot
+- payment and status tracking
+
+Cart:
+- user association
+- cart items with products
+- real-time calculations
+
+Wallet:
+- user balance tracking
+- transaction history
+- withdrawal management
+
+RELATIONSHIPS:
+- One-to-Many: User -> Products (seller)
+- Many-to-Many: Products -> Categories
+- One-to-Many: Order -> OrderItems
+- One-to-One: User -> Wallet
+
+INDEXES:
+- User email (unique)
+- Product SKU (unique)
+- Order status and date
+- Category and brand lookups
+
+6. API ENDPOINTS
+================
+
+AUTHENTICATION:
+POST /api/auth/register/          # User registration
+POST /api/auth/login/             # User login
+POST /api/auth/token/refresh/     # JWT refresh
+POST /api/auth/logout/            # User logout
+POST /api/auth/verify-email/      # Email verification
+
+CATALOG:
+GET  /api/catalog/products/       # List products
+POST /api/catalog/products/       # Create product (sellers)
+GET  /api/catalog/products/{slug}/ # Product details
+PUT  /api/catalog/products/{slug}/ # Update product
+GET  /api/catalog/categories/     # List categories
+GET  /api/catalog/brands/         # List brands
+
+CART:
+GET  /api/cart/                   # Get user cart
+POST /api/cart/add/               # Add item to cart
+PUT  /api/cart/update/{id}/       # Update cart item
+DELETE /api/cart/remove/{id}/     # Remove cart item
+
+ORDERS:
+GET  /api/orders/                 # List user orders
+POST /api/orders/                 # Create order from cart
+GET  /api/orders/{id}/            # Order details
+POST /api/orders/{id}/cancel/     # Cancel order
+
+PAYMENTS:
+POST /api/payments/create/        # Create payment
+POST /api/payments/verify/        # Verify payment
+POST /api/payments/webhook/       # Payment webhook
+
+WALLET:
+GET  /api/wallet/                 # Get wallet balance
+GET  /api/wallet/transactions/    # Transaction history
+POST /api/wallet/withdraw/        # Request withdrawal
+
+7. AUTHENTICATION & AUTHORIZATION
+=================================
+
+JWT AUTHENTICATION:
+- Access tokens (1 hour expiry)
+- Refresh tokens (7 days expiry)
+- Automatic token refresh
+- Token blacklisting on logout
+
+ROLE-BASED ACCESS:
+- CUSTOMER: Shopping and account management
+- SELLER: Product and order management
+- ADMIN: Platform administration
+
+PERMISSION SYSTEM:
+- IsAuthenticated: Requires login
+- IsSellerOrReadOnly: Sellers can modify, others read-only
+- IsSellerProfileComplete: Requires completed seller profile
+- IsOwnerOrReadOnly: Users can only modify their own data
+
+TWO-FACTOR AUTHENTICATION:
+- TOTP (Time-based One-Time Password)
+- QR code generation for authenticator apps
+- Backup codes for recovery
+
+8. PAYMENT SYSTEM
+=================
+
+RAZORPAY INTEGRATION:
+- Test and production environments
+- Card payments, UPI, wallets
+- Automatic payment verification
+- Webhook handling for status updates
+
+PAYMENT FLOW:
+1. Customer initiates checkout
+2. Razorpay order created
+3. Payment form displayed
+4. Payment processed by Razorpay
+5. Webhook verifies payment
+6. Order status updated
+7. Confirmation sent to customer
+
+COD SUPPORT:
+- Cash on Delivery option
+- No upfront payment required
+- Payment collected at delivery
+
+WALLET SYSTEM:
+- Digital wallet for quick payments
+- Refund credits to wallet
+- Withdrawal to bank accounts
+
+9. ORDER MANAGEMENT
+===================
+
+ORDER LIFECYCLE:
+1. PENDING: Order created, awaiting payment
+2. PROCESSING: Payment confirmed, preparing shipment
+3. SHIPPED: Order dispatched with tracking
+4. DELIVERED: Order successfully delivered
+5. CANCELLED: Order cancelled by customer/seller
+6. RETURNED: Order returned by customer
+
+MULTI-SELLER ORDERS:
+- Orders split by seller
+- Independent fulfillment
+- Separate tracking per seller
+- Individual seller notifications
+
+INVENTORY MANAGEMENT:
+- Real-time stock tracking
+- Automatic stock deduction
+- Low stock alerts
+- Stock restoration on cancellation
+
+10. MULTI-VENDOR SYSTEM
+=======================
+
+SELLER ONBOARDING:
+- Registration with business details
+- KYC verification (Aadhaar, PAN)
+- Bank account verification
+- Profile approval process
+
+SELLER DASHBOARD:
+- Sales analytics and reports
+- Order management interface
+- Inventory tracking
+- Payout history
+
+COMMISSION SYSTEM:
+- Platform commission on sales
+- Automatic calculation
+- Transparent fee structure
+- Monthly payout processing
+
+BULK OPERATIONS:
+- CSV/Excel product upload
+- Batch inventory updates
+- Bulk price modifications
+
+11. DEPLOYMENT & DEVOPS
+=======================
+
+DOCKER CONTAINERIZATION:
+- Multi-stage builds for optimization
+- Separate containers for services
+- Docker Compose for development
+- Production-ready configurations
+
+CI/CD PIPELINE:
+- GitHub Actions workflows
+- Automated testing on push
+- Code quality checks
+- Deployment automation
+
+ENVIRONMENT MANAGEMENT:
+- Development, staging, production
+- Environment-specific configurations
+- Secret management
+- Database migrations
+
+MONITORING:
+- Health check endpoints
+- Application logging
+- Error tracking
+- Performance monitoring
+
+12. TESTING STRATEGY
+====================
+
+BACKEND TESTING:
+- Unit tests for models and views
+- Integration tests for APIs
+- Test coverage reporting
+- Automated test execution
+
+FRONTEND TESTING:
+- Component unit tests
+- Integration tests
+- End-to-end testing
+- Visual regression testing
+
+LOAD TESTING:
+- Locust performance testing
+- API endpoint stress testing
+- Database performance optimization
+- Caching effectiveness
+
+13. SECURITY FEATURES
+=====================
+
+DATA PROTECTION:
+- Input validation and sanitization
+- SQL injection prevention
+- XSS protection
+- CSRF token validation
+
+AUTHENTICATION SECURITY:
+- Password hashing (bcrypt)
+- JWT token security
+- Rate limiting on auth endpoints
+- Account lockout protection
+
+API SECURITY:
+- CORS configuration
+- Rate limiting per endpoint
+- Request size limits
+- API key authentication
+
+FILE UPLOAD SECURITY:
+- File type validation
+- Size restrictions
+- Virus scanning
+- Secure file storage
+
+14. PERFORMANCE OPTIMIZATION
+============================
+
+DATABASE OPTIMIZATION:
+- Query optimization with indexes
+- Database connection pooling
+- Query result caching
+- Pagination for large datasets
+
+CACHING STRATEGY:
+- Redis for session storage
+- API response caching
+- Static file caching
+- Database query caching
+
+FRONTEND OPTIMIZATION:
+- Code splitting and lazy loading
+- Image optimization
+- Bundle size optimization
+- CDN for static assets
+
+15. MONITORING & LOGGING
+========================
+
+APPLICATION LOGGING:
+- Structured logging format
+- Log levels (DEBUG, INFO, WARNING, ERROR)
+- Request/response logging
+- Error tracking and alerting
+
+PERFORMANCE MONITORING:
+- Response time tracking
+- Database query monitoring
+- Memory usage tracking
+- CPU utilization monitoring
+
+BUSINESS METRICS:
+- Sales analytics
+- User engagement metrics
+- Conversion rate tracking
+- Revenue reporting
+
+CONCLUSION
+==========
+
+This E-Commerce Marketplace represents a comprehensive, production-ready solution for multi-vendor online retail. The architecture emphasizes scalability, security, and maintainability while providing a rich feature set for all stakeholders.
+
+The system is designed to handle real-world e-commerce challenges including payment processing, inventory management, order fulfillment, and customer service. With proper deployment and monitoring, it can support thousands of concurrent users and millions of products.
+
+The modular design allows for easy extension and customization, making it suitable for various business models and market requirements.
