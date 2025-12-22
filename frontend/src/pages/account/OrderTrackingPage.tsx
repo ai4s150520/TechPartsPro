@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Package, Truck, CheckCircle, MapPin, Calendar, ArrowLeft, ExternalLink } from 'lucide-react';
+import { Package, Truck, CheckCircle, MapPin, ArrowLeft, ExternalLink } from 'lucide-react';
 import apiClient from '../../lib/apiClient';
 import { format } from 'date-fns';
 

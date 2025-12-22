@@ -12,9 +12,9 @@ const ProductsPage: React.FC = () => {
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
     category: searchParams.get('category') || '',
-    min_price: searchParams.get('min_price') ? Number(searchParams.get('min_price')) : undefined,
-    max_price: searchParams.get('max_price') ? Number(searchParams.get('max_price')) : undefined,
-    ordering: searchParams.get('ordering') || undefined,
+    min_price: searchParams.get('min_price') || '',
+    max_price: searchParams.get('max_price') || '',
+    ordering: searchParams.get('ordering') || '',
     page: 1
   });
 
@@ -28,8 +28,8 @@ const ProductsPage: React.FC = () => {
     const params = new URLSearchParams();
     if (newFilters.search) params.set('search', newFilters.search);
     if (newFilters.category) params.set('category', newFilters.category);
-    if (newFilters.min_price) params.set('min_price', String(newFilters.min_price));
-    if (newFilters.max_price) params.set('max_price', String(newFilters.max_price));
+    if (newFilters.min_price) params.set('min_price', newFilters.min_price);
+    if (newFilters.max_price) params.set('max_price', newFilters.max_price);
     if (newFilters.ordering) params.set('ordering', newFilters.ordering);
     setSearchParams(params);
   }
@@ -66,7 +66,7 @@ const ProductsPage: React.FC = () => {
               title="No products found"
               description="We couldn't find any products matching your search. Try adjusting your filters or search terms."
               actionText="Clear Filters"
-              onAction={() => handleFilterChange({ search: '', category: '', min_price: undefined, max_price: undefined, ordering: undefined, page: 1 })}
+              onAction={() => handleFilterChange({ search: '', category: '', min_price: '', max_price: '', ordering: '', page: 1 })}
             />
           ) : (
             <ProductGrid products={products} loading={false} />

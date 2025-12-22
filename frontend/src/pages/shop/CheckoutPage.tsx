@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Truck, CreditCard, Plus } from 'lucide-react';
+import { MapPin, CreditCard, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useCart } from '../../hooks/useCart';
-import { useAddresses, useCreateAddress } from '../../hooks/useAddresses';
+import { useAddresses } from '../../hooks/useAddresses';
 import { useCreateOrder } from '../../hooks/useOrders';
 import OrderSummary from '../../components/checkout/OrderSummary';
 import { Button } from '../../components/ui/Button';

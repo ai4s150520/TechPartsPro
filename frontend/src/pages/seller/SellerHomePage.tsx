@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Package, TrendingUp, Upload, Plus, BarChart3, DollarSign, ShoppingBag, Users, Key } from 'lucide-react';
+import { Package, Upload, Plus, BarChart3, DollarSign, ShoppingBag, Users, Key } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
 const SellerHomePage: React.FC = () => {

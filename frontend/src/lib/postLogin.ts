@@ -1,4 +1,4 @@
-import { UserRole } from '../store/authStore';
+import type { UserRole } from '../store/authStore';
 
 interface LocationState {
   from?: {

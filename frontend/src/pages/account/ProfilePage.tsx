@@ -5,10 +5,8 @@ import AccountSidebar from '../../components/layout/AccountSidebar';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import apiClient from '../../lib/apiClient';
-import { useAuthStore } from '../../store/authStore';
 
 const ProfilePage: React.FC = () => {
-  const { user } = useAuthStore();
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',

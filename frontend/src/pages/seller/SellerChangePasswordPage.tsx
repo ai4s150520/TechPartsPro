@@ -3,7 +3,6 @@ import AccountSidebar from '../../components/layout/AccountSidebar';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { authService } from '../../lib/authService';
-import { toast } from 'react-toastify';
 
 const SellerChangePasswordPage: React.FC = () => {
   const [formData, setFormData] = useState({ oldPassword: '', newPassword: '', confirmNew: '' });

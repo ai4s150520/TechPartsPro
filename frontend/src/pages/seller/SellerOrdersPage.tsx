@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../../lib/apiClient';
-import { formatPrice } from '../../lib/utils'; // Use formatter
+import { formatPrice } from '../../lib/utils';
 import { sellerAPI } from '../../services/api';
 import { toast } from 'react-toastify';
 import { connectNotifications } from '../../services/socket';

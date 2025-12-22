@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { CheckCircle, ArrowRight, Package } from 'lucide-react';
+import { CheckCircle, Package } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
 const OrderSuccessPage: React.FC = () => {

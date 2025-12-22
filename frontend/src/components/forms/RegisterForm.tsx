@@ -67,8 +67,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, isSeller = false
       
       let errorMessage = '';
       if (typeof errorData === 'object' && errorData !== null) {
-        Object.keys(errorData).forEach(key => {
-          const value = errorData[key];
+        const keys = Object.keys(errorData);
+        keys.forEach(key => {
+          const value = (errorData as Record<string, unknown>)[key];
           if (Array.isArray(value)) {
             errorMessage += `${key}: ${value[0]} `;
           } else {

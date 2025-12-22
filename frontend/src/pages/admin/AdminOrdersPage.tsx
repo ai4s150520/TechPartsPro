@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, Filter } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import apiClient from '../../lib/apiClient';
 

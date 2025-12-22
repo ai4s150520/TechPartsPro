@@ -5,7 +5,6 @@ import { productAPI } from '../../services/api';
 
 const AdminProductsPage: React.FC = () => {
   const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchProducts();
@@ -18,8 +17,6 @@ const AdminProductsPage: React.FC = () => {
       setProducts(results);
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 

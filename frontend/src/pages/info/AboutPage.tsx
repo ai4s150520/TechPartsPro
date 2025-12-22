@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Truck, ShieldCheck, Award } from 'lucide-react';
+import { Truck, ShieldCheck, Award } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
 const AboutPage: React.FC = () => {

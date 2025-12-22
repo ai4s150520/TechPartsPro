@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Star, ThumbsUp, CheckCircle, User, Plus } from 'lucide-react';
+import { Star, ThumbsUp, CheckCircle, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import apiClient from '../../lib/apiClient';
 import { useAuthStore } from '../../store/authStore';

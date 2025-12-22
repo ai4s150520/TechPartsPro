@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, MapPin, CreditCard, ChevronRight, Wallet } from 'lucide-react';
+import { Package, MapPin, ChevronRight, Wallet } from 'lucide-react';
 import AccountSidebar from '../../components/layout/AccountSidebar';
 import apiClient from '../../lib/apiClient';
 import { useAuthStore } from '../../store/authStore';

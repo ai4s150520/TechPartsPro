@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, FileSpreadsheet, AlertCircle, CheckCircle, Download, Loader } from 'lucide-react';
+import { FileSpreadsheet, AlertCircle, CheckCircle, Download, Loader } from 'lucide-react';
 import { toast } from 'react-toastify';
 import apiClient from '../../lib/apiClient';
 import { Button } from '../../components/ui/Button';

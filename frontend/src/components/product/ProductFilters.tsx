@@ -11,6 +11,8 @@ interface ProductFilters {
   ordering: string;
 }
 
+
+
 interface ProductFiltersProps {
   filters: ProductFilters;
   setFilters: (filters: ProductFilters) => void;
