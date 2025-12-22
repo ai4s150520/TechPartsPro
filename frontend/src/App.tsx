@@ -34,6 +34,7 @@ import OrdersPage from './pages/account/OrdersPage';
 import OrderDetailPage from './pages/account/OrderDetailPage';
 import OrderTrackingPage from './pages/account/OrderTrackingPage';
 import WishlistPage from './pages/account/WishlistPage';
+import WalletPage from './pages/account/WalletPage';
 import ChangePasswordPage from './pages/account/ChangePasswordPage';
 
 // --- PAGES: CHECKOUT ---
@@ -128,6 +129,7 @@ const App = () => {
               <Route path="orders" element={<OrdersPage />} />
               <Route path="orders/:id" element={<OrderDetailPage />} />
               <Route path="orders/:orderId/track" element={<OrderTrackingPage />} />
+              <Route path="wallet" element={<WalletPage />} />
               <Route path="wishlist" element={<WishlistPage />} />
               <Route path="change-password" element={<ChangePasswordPage />} />
             </Route>

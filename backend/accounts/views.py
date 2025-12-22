@@ -9,8 +9,6 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
 from django.conf import settings
-from django_ratelimit.decorators import ratelimit
-from django.utils.decorators import method_decorator
 from .tokens import email_verification_token
 import json
 
@@ -40,7 +38,6 @@ class CustomLoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 # --- REGISTER ---
-@method_decorator(ratelimit(key='ip', rate='3/h', method='POST'), name='post')
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
@@ -100,7 +97,6 @@ class ChangePasswordView(generics.UpdateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # --- PASSWORD RESET FLOW ---
-@method_decorator(ratelimit(key='ip', rate='3/h', method='POST'), name='post')
 class PasswordResetRequestView(APIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = PasswordResetRequestSerializer

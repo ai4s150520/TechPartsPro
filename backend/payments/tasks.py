@@ -7,6 +7,7 @@ from config.celery import app
 
 from .models import RefundRequest, Transaction
 from .services import PaymentService
+from wallet.services import WalletService
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,19 @@ def refund_order_task(self, refund_request_id: str):
         rr.processed_at = timezone.now()
         rr.error_message = ''
         rr.save()
+        
+        # Credit refund amount to user's wallet
+        try:
+            WalletService.credit_wallet(
+                user=rr.order.user,
+                amount=rr.order.total_amount,
+                source='ORDER_REFUND',
+                order=rr.order,
+                description=f'Refund for cancelled order #{rr.order.order_id}'
+            )
+            logger.info(f"Refund amount ₹{rr.order.total_amount} credited to wallet for order {rr.order.order_id}")
+        except Exception as wallet_error:
+            logger.error(f"Failed to credit wallet for refund {refund_request_id}: {wallet_error}")
 
         logger.info(f"RefundRequest {refund_request_id} processed successfully")
         return refund_resp
