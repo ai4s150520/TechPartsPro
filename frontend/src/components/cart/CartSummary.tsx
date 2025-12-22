@@ -48,9 +48,10 @@ const CartSummary: React.FC<CartSummaryProps> = ({ subtotal, taxTotal, grandTota
       setAppliedCoupon(response.data.code);
       setCouponMsg({ type: 'success', text: `Coupon applied! You saved ${formatPrice(response.data.discount_amount)}` });
       
-    } catch (error: any) {
-      const errorText = error.response?.data?.message || 
-                        error.response?.data?.non_field_errors?.[0] || 
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string; non_field_errors?: string[] } } };
+      const errorText = err.response?.data?.message || 
+                        err.response?.data?.non_field_errors?.[0] || 
                         "Invalid Coupon Code";
       setCouponMsg({ type: 'error', text: errorText });
       setDiscountAmount(0);

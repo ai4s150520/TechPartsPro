@@ -41,7 +41,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, isSeller = false
 
     try {
       // Construct Payload based on Backend Serializer (accounts/serializers.py)
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         email: formData.email,
         password: formData.password,
         password_confirm: formData.confirmPassword,
@@ -59,14 +59,14 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, isSeller = false
       await authService.register(payload);
       onSuccess();
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Registration error:', err);
-      console.error('Error response:', err.response?.data);
       
-      const errorData = err.response?.data || err;
+      const error = err as { response?: { data?: Record<string, unknown> }; message?: string };
+      const errorData = error.response?.data || error;
       
       let errorMessage = '';
-      if (typeof errorData === 'object') {
+      if (typeof errorData === 'object' && errorData !== null) {
         Object.keys(errorData).forEach(key => {
           const value = errorData[key];
           if (Array.isArray(value)) {
@@ -77,7 +77,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, isSeller = false
         });
       }
       
-      setError(errorMessage || errorData.detail || err.message || "Registration failed. Please check your inputs.");
+      setError(errorMessage || (errorData as { detail?: string })?.detail || error.message || "Registration failed. Please check your inputs.");
     } finally {
       setLoading(false);
     }

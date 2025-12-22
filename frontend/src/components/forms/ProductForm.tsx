@@ -9,7 +9,19 @@ import { getImageUrl } from '../../lib/utils';
 
 interface ProductFormProps {
   onSuccess: () => void;
-  initialData?: any; // Added prop for Edit Mode
+  initialData?: {
+    name?: string;
+    sku?: string;
+    price?: number;
+    discount_percentage?: number;
+    tax_rate?: number;
+    stock_quantity?: number;
+    description?: string;
+    category?: string;
+    specifications?: Record<string, unknown>;
+    images?: Array<{ id: number; image: string }>;
+    slug?: string;
+  };
 }
 
 const ProductForm: React.FC<ProductFormProps> = ({ onSuccess, initialData }) => {
@@ -29,7 +41,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess, initialData }) => 
 
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
-  const [existingImages, setExistingImages] = useState<any[]>([]); // For Edit Mode
+  const [existingImages, setExistingImages] = useState<Array<{ id: number; image: string }>>([]);
   
   const [specs, setSpecs] = useState<{key: string, value: string}[]>([{ key: '', value: '' }]);
   const [isProfileComplete, setIsProfileComplete] = useState<boolean>(true);
@@ -178,9 +190,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess, initialData }) => 
 
       onSuccess();
 
-    } catch (error: any) {
-      // Avoid leaving console.error in production code; show user-friendly toast
-      toast.error(error.response?.data?.detail || "Failed to save product");
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
+      toast.error(err.response?.data?.detail || "Failed to save product");
     } finally {
       setLoading(false);
     }

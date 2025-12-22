@@ -11,7 +11,7 @@ const PublicOnly: React.FC = () => {
     
     // 1. Check if there is a 'from' location in state (User was redirected here)
     // e.g., User clicked Checkout -> Login -> (Success) -> Back to Checkout
-    const from = (location.state as any)?.from?.pathname;
+    const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
     if (from) {
       return <Navigate to={from} replace />;
     }

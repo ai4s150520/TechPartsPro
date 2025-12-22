@@ -19,13 +19,13 @@ class AuthenticationTests(TestCase):
     def test_user_registration(self):
         data = self.user_data.copy()
         data['password_confirm'] = data['password']
-        response = self.client.post('/api/accounts/register/', data)
+        response = self.client.post('/api/auth/register/', data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(User.objects.filter(email=self.user_data['email']).exists())
     
     def test_user_login(self):
         User.objects.create_user(**self.user_data)
-        response = self.client.post('/api/accounts/login/', {
+        response = self.client.post('/api/auth/login/', {
             'email': self.user_data['email'],
             'password': self.user_data['password']
         })
@@ -34,7 +34,7 @@ class AuthenticationTests(TestCase):
         self.assertIn('refresh', response.data)
     
     def test_invalid_login(self):
-        response = self.client.post('/api/accounts/login/', {
+        response = self.client.post('/api/auth/login/', {
             'email': 'wrong@example.com',
             'password': 'wrongpass'
         })

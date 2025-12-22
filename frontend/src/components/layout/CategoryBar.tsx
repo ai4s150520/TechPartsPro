@@ -6,6 +6,7 @@ interface Category {
   id: number;
   name: string;
   slug: string;
+  parent?: number | null;
 }
 
 const CategoryBar: React.FC = () => {
@@ -18,7 +19,7 @@ const CategoryBar: React.FC = () => {
       try {
         const res = await apiClient.get('/catalog/categories/');
         // Filter only top-level categories (parent is null)
-        const topLevel = res.data.results.filter((c: any) => !c.parent);
+        const topLevel = res.data.results.filter((c: Category) => !c.parent);
         setCategories(topLevel);
       } catch (err) {
         console.error("Failed to load categories", err);

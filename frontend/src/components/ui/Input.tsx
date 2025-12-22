@@ -1,4 +1,5 @@
-import React, { InputHTMLAttributes, useState, forwardRef } from 'react';
+import React, { useState, forwardRef } from 'react';
+import type { InputHTMLAttributes } from 'react';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';

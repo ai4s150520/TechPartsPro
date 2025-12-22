@@ -40,8 +40,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, isSeller = false }) =>
       // 4. Trigger Parent Success Action
       onSuccess();
 
-    } catch (err: any) {
-      setError(err.detail || "Invalid email or password");
+    } catch (err: unknown) {
+      const error = err as { detail?: string };
+      setError(error.detail || "Invalid email or password");
     } finally {
       setLoading(false);
     }
