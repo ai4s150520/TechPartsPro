@@ -50,7 +50,7 @@ const ReviewList: React.FC<ReviewListProps> = ({ productSlug, productId }) => {
 
   useEffect(() => {
     if (productSlug) fetchReviews();
-  }, [productSlug]);
+  }, [productSlug, fetchReviews]);
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,8 +73,10 @@ const ReviewList: React.FC<ReviewListProps> = ({ productSlug, productId }) => {
       setRating(5);
       setTitle('');
       setComment('');
-    } catch (error: any) {
-      const msg = error.response?.data?.detail || error.response?.data?.non_field_errors?.[0] || "Failed to submit review";
+    } catch (err) {
+      const msg = err instanceof Error && 'response' in err 
+        ? (err as any).response?.data?.detail || (err as any).response?.data?.non_field_errors?.[0] || "Failed to submit review"
+        : "Failed to submit review";
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -87,7 +89,7 @@ const ReviewList: React.FC<ReviewListProps> = ({ productSlug, productId }) => {
       const res = await apiClient.post(`/reviews/${reviewId}/helpful/`);
       // Optimistic update
       setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, helpful_count: res.data.count } : r));
-    } catch (error) {
+    } catch {
       console.error("Vote failed");
     }
   };

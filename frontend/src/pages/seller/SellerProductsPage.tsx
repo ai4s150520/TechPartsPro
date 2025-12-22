@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Eye, FileSpreadsheet, CheckSquare, Square } from 'lucide-react';
 import { toast } from 'react-toastify';
 import apiClient from '../../lib/apiClient';
-import { productAPI } from '../../services/api';
 import { Button } from '../../components/ui/Button';
 import { formatPrice, getImageUrl } from '../../lib/utils';
 

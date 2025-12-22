@@ -93,48 +93,9 @@ const SellerOrdersPage: React.FC = () => {
     }
   };
 
-  const handlePack = async (id: string) => {
-    try {
-      await sellerAPI.packOrderItem(id);
-      setItems(prev => prev.map(i => i.id === id ? { ...i, status: 'PACKAGED' } : i));
-      toast.success('Item marked as packaged');
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err?.response?.data?.error || 'Failed to mark packaged');
-    }
-  };
-
-  const handleShip = async (id: string) => {
-    // If we have a pre-configured courier list, prompt selection
-    let courier_name: string | undefined;
-    if (couriers && couriers.length > 0) {
-      const list = couriers.map((c, idx) => `${idx+1}. ${c.name}`).join('\n');
-      const choice = window.prompt(`Select courier by number (or leave blank to type name):\n${list}`);
-      if (choice) {
-        const idx = parseInt(choice, 10) - 1;
-        if (!isNaN(idx) && couriers[idx]) courier_name = couriers[idx].name;
-        else courier_name = choice;
-      }
-    } else {
-      courier_name = window.prompt('Enter courier name (optional)') || undefined;
-    }
-
-    const tracking = window.prompt('Enter tracking number (optional)');
-    const daysStr = window.prompt('Estimated delivery in days (optional)');
-    const data: any = {};
-    if (tracking) data.tracking_number = tracking;
-    if (courier_name) data.courier_name = courier_name;
-    if (daysStr) data.estimated_days = Number(daysStr) || undefined;
-
-    try {
-      await sellerAPI.shipOrderItem(id, data);
-      setItems(prev => prev.map(i => i.id === id ? { ...i, status: 'SHIPPED', tracking_number: data.tracking_number || i.tracking_number, courier_name: data.courier_name || i.courier_name } : i));
-      toast.success('Item marked as shipped');
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err?.response?.data?.error || 'Failed to mark shipped');
-    }
-  };
+  // Removed unused functions
+  // const handlePack = async (id: string) => { ... }
+  // const handleShip = async (id: string) => { ... }
 
   return (
     <div className="space-y-6">

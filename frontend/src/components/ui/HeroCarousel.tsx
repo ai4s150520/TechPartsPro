@@ -53,7 +53,15 @@ const HeroCarousel: React.FC = () => {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [slides, setSlides] = useState<Slide[]>(defaultSlides);
-  const timeoutRef = useRef<any>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const nextSlide = () => {
+    setCurrent(prev => (prev === slides.length - 1 ? 0 : prev + 1));
+  };
+
+  const prevSlide = () => {
+    setCurrent(prev => (prev === 0 ? slides.length - 1 : prev - 1));
+  };
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -80,24 +88,15 @@ const HeroCarousel: React.FC = () => {
     fetchCategories();
   }, []);
 
-  const nextSlide = () => {
-    setCurrent(prev => (prev === slides.length - 1 ? 0 : prev + 1));
-  };
-
-  const prevSlide = () => {
-    setCurrent(prev => (prev === 0 ? slides.length - 1 : prev - 1));
-  };
-
-  if (slides.length === 0) return null;
-
   // Auto-play Logic
   useEffect(() => {
-    if (slides.length === 0) return;
-    if (!isPaused) {
-      timeoutRef.current = setTimeout(nextSlide, 5000); // 5 Seconds
-    }
-    return () => clearTimeout(timeoutRef.current);
-  }, [current, isPaused]);
+    if (slides.length === 0 || isPaused) return;
+    
+    timeoutRef.current = setTimeout(nextSlide, 5000);
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [current, isPaused, nextSlide, slides.length]);
 
   return (
     <div 

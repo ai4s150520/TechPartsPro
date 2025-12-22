@@ -16,13 +16,13 @@ export interface LoginResponse {
 export const authService = {
   // Login
   // PURE FUNCTION: Only returns data. Does not save to LocalStorage/Store.
-  async login(credentials: any): Promise<LoginResponse> {
+  async login(credentials: { email: string; password: string }): Promise<LoginResponse> {
     const response = await apiClient.post<LoginResponse>('/auth/login/', credentials);
     return response.data; 
   },
 
   // Register
-  async register(data: any) {
+  async register(data: { email: string; password: string; first_name: string; last_name: string; role: string }) {
     const response = await apiClient.post('/auth/register/', data);
     return response.data;
   },
@@ -48,7 +48,7 @@ export const authService = {
   },
 
   // Change Password
-  async changePassword(data: any) {
+  async changePassword(data: { old_password: string; new_password: string }) {
     const response = await apiClient.put('/auth/change-password/', data);
     return response.data;
   }

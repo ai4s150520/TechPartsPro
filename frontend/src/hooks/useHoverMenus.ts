@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 
 export const useHoverMenu = (delay: number = 200) => {
   const [isOpen, setIsOpen] = useState(false);
-  const timeoutRef = useRef<any>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const openMenu = useCallback(() => {
     // If there is a pending close action, cancel it

@@ -117,6 +117,8 @@ export interface Cart {
   items: CartItem[];
   total_price: number;
   total_items: number;
+  grand_total: number;
+  total_tax: number;
   updated_at: string;
 }
 
