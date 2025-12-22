@@ -1,11 +1,22 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { TrendingUp, Users, DollarSign } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import Footer from '../../components/layout/Footer';
 import SellerHeader from '../../components/layout/SellerHeader';
+import { useAuthStore } from '../../store/authStore';
 
 const SellOnlinePage: React.FC = () => {
+  const { user, isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
+
+  // If user is already a seller, redirect to seller dashboard
+  React.useEffect(() => {
+    if (isAuthenticated && user?.role === 'SELLER') {
+      navigate('/seller/dashboard');
+    }
+  }, [isAuthenticated, user, navigate]);
+
   return (
     <div className="bg-white min-h-screen flex flex-col">
       <SellerHeader />
@@ -20,19 +31,34 @@ const SellOnlinePage: React.FC = () => {
               Join the largest marketplace for mobile spare parts. Reach 50,000+ repair shops and technicians instantly.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/seller/login">
-                <Button size="lg" variant="outline" className="px-8 py-4 text-lg border-2 border-orange-500 text-orange-500 hover:bg-orange-50">
-                  Seller Login
-                </Button>
-              </Link>
-              <Link to="/seller/register">
-                <Button size="lg" variant="seller" className="px-8 py-4 text-lg">
-                  Start Selling Today
-                </Button>
-              </Link>
+              {isAuthenticated && user?.role === 'CUSTOMER' ? (
+                // If customer wants to become seller, show upgrade option
+                <Link to="/seller/register">
+                  <Button size="lg" variant="seller" className="px-8 py-4 text-lg">
+                    Upgrade to Seller Account
+                  </Button>
+                </Link>
+              ) : !isAuthenticated ? (
+                // If not authenticated, show normal flow
+                <>
+                  <Link to="/seller/login">
+                    <Button size="lg" variant="outline" className="px-8 py-4 text-lg border-2 border-orange-500 text-orange-500 hover:bg-orange-50">
+                      Seller Login
+                    </Button>
+                  </Link>
+                  <Link to="/seller/register">
+                    <Button size="lg" variant="seller" className="px-8 py-4 text-lg">
+                      Start Selling Today
+                    </Button>
+                  </Link>
+                </>
+              ) : null}
             </div>
             <p className="text-sm text-gray-400 mt-4">
-              New to selling? Sign up now • Already a seller? Login to your account
+              {isAuthenticated && user?.role === 'CUSTOMER' 
+                ? 'Convert your customer account to start selling'
+                : 'New to selling? Sign up now • Already a seller? Login to your account'
+              }
             </p>
           </div>
           <div className="md:w-1/2 flex justify-center">

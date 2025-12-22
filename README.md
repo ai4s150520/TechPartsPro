@@ -192,8 +192,7 @@ DATABASE_URL=postgresql://postgres:postgres123@db:5432/ecommerce_db
 
 # Redis & Celery
 REDIS_URL=redis://redis:6379/1
-CELERY_BROKER_URL=redis://redis:6379/0
-
+CELERY_BROKER_URL=![1766383149093](image/README/1766383149093.png)
 # Payment Gateway (Razorpay)
 RAZORPAY_KEY_ID=rzp_test_your_key_id
 RAZORPAY_KEY_SECRET=your_razorpay_secret

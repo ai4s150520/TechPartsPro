@@ -67,8 +67,8 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         {/* Navigation Actions */}
         <div className="flex items-center gap-1 sm:gap-3">
           
-          {/* Become a Seller Button - Only for Guests */}
-          {!isAuthenticated && (
+          {/* Become a Seller Button - Only for Guests and Customers */}
+          {(!isAuthenticated || user?.role === 'CUSTOMER') && (
             <Link 
               to="/sell-online" 
               className="hidden md:flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium text-sm shadow-sm"

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import Header from './Header';
+import SmartHeader from './SmartHeader';
 import Footer from './Footer';
 import SideDrawer from './SideDrawer';
 
@@ -9,12 +9,8 @@ const Layout: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 font-sans">
-      <Header onMenuClick={() => setIsDrawerOpen(true)} />
+      <SmartHeader onMenuClick={() => setIsDrawerOpen(true)} />
       
-      {/* <div className="hidden md:block">
-        <CategoryBar />  <--- DELETE THIS BLOCK
-      </div> */}
-
       <SideDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
 
       <main className="flex-grow relative z-10">
