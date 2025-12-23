@@ -2,8 +2,8 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Package, Users, DollarSign, Truck, Building, 
-  Globe, ShieldCheck, TrendingUp, BarChart, 
-  Target, Warehouse, CheckCircle, Percent,
+  Globe, ShieldCheck, BarChart, 
+  Target, Warehouse, Percent,
   ArrowRight, MapPin, CreditCard, FileText, Sparkles, Award
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
@@ -164,7 +164,7 @@ const SellOnlinePage: React.FC = () => {
                     <DollarSign className="w-8 h-8 text-white" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 font-medium">Average Monthly Revenue</p>
+                    <p className="text-xs text-slate-500 font-medium">Upto Average Monthly Revenue</p>
                     <p className="font-black text-slate-900 text-lg">₹3.8L/seller</p>
                   </div>
                 </div>
@@ -430,22 +430,22 @@ const SellOnlinePage: React.FC = () => {
 
       <Footer />
 
-      <style jsx>{`
-        @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes bounce-slow {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
-        .animate-spin-slow {
-          animation: spin-slow 20s linear infinite;
-        }
-        .animate-bounce-slow {
-          animation: bounce-slow 6s ease-in-out infinite;
-        }
-      `}</style>
+      // <style tsx>{`
+      //   @keyframes spin-slow {
+      //     from { transform: rotate(0deg); }
+      //     to { transform: rotate(360deg); }
+      //   }
+      //   @keyframes bounce-slow {
+      //     0%, 100% { transform: translateY(0px); }
+      //     50% { transform: translateY(-20px); }
+      //   }
+      //   .animate-spin-slow {
+      //     animation: spin-slow 20s linear infinite;
+      //   }
+      //   .animate-bounce-slow {
+      //     animation: bounce-slow 6s ease-in-out infinite;
+      //   }
+      // `}</style>
     </div>
   );
 };
