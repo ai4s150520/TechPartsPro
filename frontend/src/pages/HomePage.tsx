@@ -426,27 +426,27 @@ const HomePage: React.FC = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
             {shopOwnerTestimonials.map((testimonial, idx) => (
-              <div key={idx} className="bg-white/90 backdrop-blur-sm p-10 rounded-2xl shadow-xl border-2 border-slate-100 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 hover:-rotate-1">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg">
+              <div key={idx} className="bg-white/90 backdrop-blur-sm p-6 md:p-10 rounded-2xl shadow-xl border-2 border-slate-100 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 hover:-rotate-1">
+                <div className="flex items-center gap-4 mb-6 md:mb-8">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-xl md:text-2xl shadow-lg flex-shrink-0">
                     {testimonial.avatar}
                   </div>
-                  <div>
-                    <p className="font-black text-slate-900 text-lg">{testimonial.name}</p>
-                    <p className="text-sm text-slate-500 font-medium">{testimonial.city}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-black text-slate-900 text-base md:text-lg truncate">{testimonial.name}</p>
+                    <p className="text-xs md:text-sm text-slate-500 font-medium">{testimonial.city}</p>
                   </div>
                 </div>
                 
-                <Quote className="w-10 h-10 text-blue-600 mb-6" />
-                <p className="text-slate-700 mb-8 italic leading-relaxed text-lg font-medium">"{testimonial.text}"</p>
+                <Quote className="w-8 h-8 md:w-10 md:h-10 text-blue-600 mb-4 md:mb-6" />
+                <p className="text-slate-700 mb-6 md:mb-8 italic leading-relaxed text-base md:text-lg font-medium">"{testimonial.text}"</p>
                 
-                <div className="flex items-center justify-between pt-6 border-t-2 border-slate-100">
-                  <div className="px-6 py-3 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 rounded-xl border-2 border-green-200">
-                    <span className="font-black">{testimonial.savings}</span>
+                <div className="flex flex-col gap-4 pt-4 md:pt-6 border-t-2 border-slate-100">
+                  <div className="w-full px-4 py-2 md:px-6 md:py-3 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 rounded-xl border-2 border-green-200 text-center">
+                    <span className="font-black text-sm md:text-base">{testimonial.savings}</span>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 justify-center">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-6 h-6 fill-yellow-400 text-yellow-400" />
+                      <Star key={i} className="w-5 h-5 md:w-6 md:h-6 fill-yellow-400 text-yellow-400" />
                     ))}
                   </div>
                 </div>
