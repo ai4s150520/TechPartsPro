@@ -20,7 +20,10 @@ const OrdersPage: React.FC = () => {
   const { data, isLoading, error } = useOrders();
   const { mutate: cancelOrder, isPending: cancelling } = useCancelOrder();
   
-  // Debug log removed
+  // Debug: Log the response data
+  console.log('Orders data:', data);
+  console.log('Orders error:', error);
+  
   const orders = Array.isArray(data) ? data : (data?.results || []);
 
   const getStatusColor = (status: string) => {
@@ -32,7 +35,7 @@ const OrdersPage: React.FC = () => {
     }
   };
 
-  const handleCancelOrder = (orderId: number) => {
+  const handleCancelOrder = (orderId: string) => {
     if (!confirm('Are you sure you want to cancel this order?')) return;
     
     cancelOrder(orderId, {
@@ -41,14 +44,16 @@ const OrdersPage: React.FC = () => {
     });
   };
 
-  const handleReplaceOrder = async (orderId: number) => {
-    if (!confirm('Are you sure you want to create a replacement order?')) return;
+  const handleReplaceOrder = async (orderId: string) => {
     try {
       const resp = await orderAPI.replace(orderId);
-      toast.success('Replacement order created');
+      toast.success('Replacement order created successfully');
       // Redirect to payment if required
       if (resp.data?.payment_required) {
         window.location.href = `/account/orders/${resp.data.new_order_id}`;
+      } else {
+        // Refresh the orders list
+        window.location.reload();
       }
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Failed to create replacement order');
@@ -71,7 +76,13 @@ const OrdersPage: React.FC = () => {
           ) : error ? (
             <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
               <p className="text-red-600">Failed to load orders. Please try again.</p>
-              <p className="text-xs text-gray-500 mt-2">{error?.message}</p>
+              <p className="text-xs text-gray-500 mt-2">Server error. Please try again later.</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+              >
+                Retry
+              </button>
             </div>
           ) : orders.length === 0 ? (
             <EmptyState

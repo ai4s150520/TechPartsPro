@@ -49,31 +49,48 @@ class ProductViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']  # Default ordering
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        user = self.request.user
-        
-        logger.info(f"ProductViewSet.get_queryset - User: {user}, Role: {getattr(user, 'role', 'None')}, Authenticated: {user.is_authenticated}")
+        try:
+            queryset = super().get_queryset()
+            user = self.request.user
+            
+            logger.info(f"ProductViewSet.get_queryset - User: {user}, Role: {getattr(user, 'role', 'None')}, Authenticated: {user.is_authenticated}")
 
-        if user.is_staff or (user.is_authenticated and user.role == 'ADMIN'):
-            logger.info("Returning all products for admin/staff")
+            # Admin users see all products
+            if user.is_staff or (user.is_authenticated and user.role == 'ADMIN'):
+                logger.info("Returning all products for admin/staff")
+                return queryset
+
+            # Check if this is a seller requesting only their products (seller dashboard)
+            my_products_only = self.request.query_params.get('my_products', 'false').lower() == 'true'
+            
+            if user.is_authenticated and user.role == 'SELLER' and my_products_only:
+                # Seller dashboard - show only seller's own products
+                seller_products = queryset.filter(seller=user)
+                logger.info(f"Returning {seller_products.count()} seller products for user {user.id}")
+                return seller_products
+            
+            # For ALL other cases (customers, anonymous users, sellers browsing marketplace)
+            # Show ALL active products with stock from ALL sellers
+            queryset = queryset.filter(
+                is_active=True,
+                stock_quantity__gt=0
+            )
+            
+            # Handle category filter
+            category_slug = self.request.query_params.get('category')
+            if category_slug:
+                queryset = queryset.filter(category__slug=category_slug)
+            
+            # Handle brand filter
+            brand = self.request.query_params.get('brand')
+            if brand:
+                queryset = queryset.filter(brand__name__icontains=brand)
+            
+            logger.info(f"Returning {queryset.count()} active products from ALL sellers for marketplace view")
             return queryset
-
-        # Sellers can only access their own products
-        if user.is_authenticated and user.role == 'SELLER':
-            seller_products = queryset.filter(seller=user)
-            logger.info(f"Returning seller products for user {user.id}")
-            return seller_products
-        
-        # Regular customers see only active products
-        queryset = queryset.filter(is_active=True)
-        
-        # Handle category filter (accept both 'category' and 'category__slug')
-        category_slug = self.request.query_params.get('category')
-        if category_slug:
-            queryset = queryset.filter(category__slug=category_slug)
-        
-        logger.info(f"Returning active products for customer/anonymous")
-        return queryset
+        except Exception as e:
+            logger.error(f"ProductViewSet.get_queryset error: {str(e)}")
+            return Product.objects.none()
 
     def get_serializer_class(self):
         if self.action == 'list':

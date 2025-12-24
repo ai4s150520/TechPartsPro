@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  ArrowRight, ShieldCheck, Truck, RotateCcw, Wrench, 
-  Smartphone, Battery, Zap, Camera, Speaker, HardDrive, 
-  Layers, PenTool, CaseUpper, Grid, Flame, Star, Quote,
-  Package, Users, Building, TrendingUp, Clock, CheckCircle,
+  ArrowRight, ShieldCheck, Truck, Wrench, 
+  Smartphone, Battery, Zap, Camera, 
+  Layers, CaseUpper, Grid, Star, Quote,
+  Package, Users, TrendingUp, Clock,
   BarChart, Target, Globe, ShoppingBag, Sparkles, Award,
-  Cpu, Monitor, Headphones, Gamepad2, Tablet, Watch
+  Cpu, Monitor, Headphones
 } from 'lucide-react';
 import ProductCard, { type ProductSummary } from '../components/product/ProductCard';
 import apiClient from '../lib/apiClient';
 import { Button } from '../components/ui/Button';
 import AnimatedCounter from '../components/ui/AnimatedCounter';
 import { ProductCardSkeleton } from '../components/ui/SkeletonLoader';
+import TopSellersGrid from '../components/ui/TopSellersGrid';
 
 interface Category {
   id: string;
@@ -382,6 +383,22 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
+      {/* Top Sellers Section */}
+      <section className="relative z-10 py-16 md:py-20 bg-white">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 mb-4 bg-gradient-to-r from-slate-900 to-blue-900 bg-clip-text text-transparent">
+              🏆 Top Selling Partners
+            </h2>
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+              Meet our highest-rated sellers with 100% customer satisfaction
+            </p>
+          </div>
+          
+          <TopSellersGrid />
+        </div>
+      </section>
+
       {/* Brand Section */}
       <section className="relative z-10 py-16 bg-gradient-to-br from-slate-100 to-blue-100">
         <div className="container mx-auto px-4">
@@ -564,7 +581,7 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      <style jsx>{`
+      <style>{`
         @keyframes spin-slow {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }

@@ -81,6 +81,15 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           {/* Customer Navigation */}
           {user?.role === 'CUSTOMER' && (
             <>
+              {/* Products Button */}
+              <Link 
+                to="/shop" 
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm"
+              >
+                <Package className="w-4 h-4" />
+                <span>Products</span>
+              </Link>
+              
               {/* Notifications */}
               <NotificationDropdown />
               

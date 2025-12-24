@@ -190,7 +190,7 @@ const SellerProfilePage: React.FC = () => {
               name="business_name"
               value={formData.business_name}
               onChange={handleChange}
-              icon={Store}
+              startIcon={<Store className="w-4 h-4" />}
               disabled={!isEditing}
               required
               error={errors.business_name}
@@ -201,7 +201,7 @@ const SellerProfilePage: React.FC = () => {
               name="business_email"
               value={formData.business_email}
               onChange={handleChange}
-              icon={Mail}
+              startIcon={<Mail className="w-4 h-4" />}
               disabled={!isEditing}
               required
               error={errors.business_email}
@@ -214,7 +214,7 @@ const SellerProfilePage: React.FC = () => {
               name="business_phone"
               value={formData.business_phone}
               onChange={handleChange}
-              icon={Phone}
+              startIcon={<Phone className="w-4 h-4" />}
               disabled={!isEditing}
               required
               error={errors.business_phone}

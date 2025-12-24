@@ -95,6 +95,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "core.middleware.DisableThrottlingMiddleware",
+    "core.middleware.ErrorHandlingMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "core.middleware.RequestLoggingMiddleware",
@@ -227,12 +229,12 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle'
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',
-        'user': '1000/hour',
-        'burst': '10/minute',
-        'login': '5/minute',
-        'register': '3/hour',
-        'password_reset': '3/hour',
+        'anon': '1000/hour',
+        'user': '5000/hour',
+        'burst': '100/minute',
+        'login': '20/minute',
+        'register': '10/hour',
+        'password_reset': '10/hour',
     }
 }
 
@@ -285,21 +287,28 @@ CORS_ALLOW_METHODS = list(default_methods) + [
 # --- EXTERNAL SERVICES ---
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# --- CELERY CONFIGURATION ---
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://127.0.0.1:6379/0")
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60  # 25 minutes
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_ACKS_LATE = True
+CELERY_WORKER_DISABLE_RATE_LIMITS = False
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
 
-# Channels (WebSocket) configuration
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [env('REDIS_URL', default='redis://127.0.0.1:6379')],
-        },
-    },
+# Task routing
+CELERY_TASK_ROUTES = {
+    'catalog.tasks.*': {'queue': 'catalog'},
+    'notifications.tasks.*': {'queue': 'notifications'},
+    'payments.tasks.*': {'queue': 'payments'},
+    'sellers.tasks.*': {'queue': 'sellers'},
+    'shipping.tasks.*': {'queue': 'shipping'},
 }
 
 # Only use eager mode in tests, not in dev/prod

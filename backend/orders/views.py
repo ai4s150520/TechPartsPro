@@ -1,12 +1,16 @@
 from rest_framework import generics, permissions, status, views
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from django.db.models import Q
 from .models import Order
 from .serializers import OrderSerializer, CreateOrderSerializer
 from .services import OrderService
 from django.core.exceptions import ValidationError
 from payments.services import PaymentService 
 from payments.models import RefundRequest
+import logging
+
+logger = logging.getLogger(__name__)
 
 class OrderListView(generics.ListAPIView):
     """ List all orders for the logged-in user """
@@ -14,16 +18,54 @@ class OrderListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+        try:
+            user = self.request.user
+            logger.info(f"OrderListView: User {user.id} ({user.email}) requesting orders")
+            
+            # Enhanced queryset with proper filtering and ordering
+            queryset = Order.objects.filter(
+                user=user
+            ).select_related(
+                'user'
+            ).prefetch_related(
+                'items__product', 'items__seller'
+            ).order_by('-created_at')
+            
+            count = queryset.count()
+            logger.info(f"OrderListView: Found {count} orders for user {user.id}")
+            
+            if count == 0:
+                logger.info(f"OrderListView: No orders found for user {user.email}. This is normal for new customers.")
+            
+            return queryset
+        except Exception as e:
+            logger.error(f"OrderListView error for user {self.request.user.id}: {str(e)}")
+            return Order.objects.none()
 
 class OrderDetailView(generics.RetrieveAPIView):
     """ Get single order details """
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]
-    lookup_field = 'id' # Look up by UUID
+    lookup_field = 'id'
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+        try:
+            user = self.request.user
+            logger.info(f"OrderDetailView: User {user.id} requesting order details")
+            
+            queryset = Order.objects.filter(
+                user=user
+            ).select_related(
+                'user'
+            ).prefetch_related(
+                'items__product', 'items__seller'
+            )
+            
+            logger.info(f"OrderDetailView: Queryset prepared for user {user.id}")
+            return queryset
+        except Exception as e:
+            logger.error(f"OrderDetailView error for user {self.request.user.id}: {str(e)}")
+            return Order.objects.none()
 
 class CheckoutView(views.APIView):
     """
@@ -266,5 +308,37 @@ def refund_order(request, order_id):
 
         return Response({"message": "Refund queued"}, status=status.HTTP_202_ACCEPTED)
 
+    except Order.DoesNotExist:
+        return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def track_order(request, id):
+    """Track order status and shipment details"""
+    try:
+        order = Order.objects.get(id=id, user=request.user)
+        
+        # Return tracking information
+        tracking_data = {
+            'order_id': order.order_id,
+            'status': order.status,
+            'tracking_number': order.tracking_number,
+            'courier_name': order.courier_name,
+            'estimated_delivery': order.estimated_delivery,
+            'tracking_updates': order.tracking_updates,
+            'items': []
+        }
+        
+        # Add item-level tracking
+        for item in order.items.all():
+            tracking_data['items'].append({
+                'product_name': item.product_name,
+                'status': item.status,
+                'tracking_number': item.tracking_number,
+                'courier_name': item.courier_name
+            })
+        
+        return Response(tracking_data)
+        
     except Order.DoesNotExist:
         return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)

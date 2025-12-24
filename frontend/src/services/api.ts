@@ -109,17 +109,17 @@ export const orderAPI = {
   list: (params?: { status?: string; page?: number }) =>
     apiClient.get<{ results: Order[]; count: number }>('/orders/', { params }),
   
-  get: (id: number) =>
+  get: (id: string) =>
     apiClient.get<Order>(`/orders/${id}/`),
   
   create: (data: { address_id: number; payment_method: string }) =>
     apiClient.post<Order>('/orders/checkout/', data),
   
-  cancel: (id: number) =>
+  cancel: (id: string) =>
     apiClient.post(`/orders/${id}/cancel/`),
-  replace: (id: number) =>
+  replace: (id: string) =>
     apiClient.post(`/orders/${id}/replace/`),
-  refund: (id: number) =>
+  refund: (id: string) =>
     apiClient.post(`/orders/${id}/refund/`),
   
   track: (orderId: string) =>

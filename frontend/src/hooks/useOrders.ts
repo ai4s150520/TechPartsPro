@@ -8,14 +8,15 @@ export const useOrders = (params?: { status?: string; page?: number }) => {
     queryKey: ['orders', params],
     queryFn: async () => {
       const response = await orderAPI.list(params);
+      console.log('Orders API Response:', response.data); // Debug log
       return response.data;
     },
-    retry: false,
+    retry: 1,
     enabled: isAuthenticated,
   });
 };
 
-export const useOrder = (id: number) => {
+export const useOrder = (id: string) => {
   return useQuery({
     queryKey: ['order', id],
     queryFn: async () => {
@@ -42,7 +43,7 @@ export const useCancelOrder = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (id: number) => orderAPI.cancel(id),
+    mutationFn: (id: string) => orderAPI.cancel(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     },

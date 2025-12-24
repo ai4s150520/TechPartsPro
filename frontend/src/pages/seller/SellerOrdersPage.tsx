@@ -8,7 +8,6 @@ import { connectNotifications } from '../../services/socket';
 const SellerOrdersPage: React.FC = () => {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [couriers, setCouriers] = useState<any[]>([]);
 
   useEffect(() => {
     // Initial fetch and periodic refresh to reflect server-side status changes
@@ -28,10 +27,10 @@ const SellerOrdersPage: React.FC = () => {
 
     loadInitial();
 
-    // Load supported couriers for selection
-    sellerAPI.getCouriers()
-      .then(res => setCouriers(res.data || []))
-      .catch(() => setCouriers([]));
+    // Load supported couriers for selection (removed unused state)
+    // sellerAPI.getCouriers()
+    //   .then(res => setCouriers(res.data || []))
+    //   .catch(() => setCouriers([]));
 
     // Poll for updates so admin-side changes (e.g., Delivered) reflect here
     const interval = setInterval(async () => {

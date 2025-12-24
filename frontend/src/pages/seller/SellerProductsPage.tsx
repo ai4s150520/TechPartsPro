@@ -18,7 +18,7 @@ const SellerProductsPage: React.FC = () => {
     setLoading(true);
     try {
       // Use seller-specific endpoint that returns only seller's products
-      const res = await apiClient.get('/catalog/products/');
+      const res = await apiClient.get('/catalog/products/?my_products=true');
       console.log('Products API response:', res.data); // Debug log
       const results = res && res.data && Array.isArray(res.data.results) ? res.data.results : [];
       console.log('Processed results:', results); // Debug log

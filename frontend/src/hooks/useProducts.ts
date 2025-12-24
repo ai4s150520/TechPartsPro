@@ -1,11 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productAPI } from '../services/api';
 
-export const useProducts = (params?: { category?: string; search?: string; min_price?: number; max_price?: number; page?: number; ordering?: string }) => {
+export const useProducts = (params?: { category?: string; search?: string; min_price?: string; max_price?: string; page?: number; ordering?: string }) => {
   return useQuery({
     queryKey: ['products', params],
     queryFn: async () => {
-      const response = await productAPI.list(params);
+      // Convert string prices to numbers for API
+      const apiParams = {
+        ...params,
+        min_price: params?.min_price ? Number(params.min_price) : undefined,
+        max_price: params?.max_price ? Number(params.max_price) : undefined,
+      };
+      const response = await productAPI.list(apiParams);
       return response.data;
     },
   });

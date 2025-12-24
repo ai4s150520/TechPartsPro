@@ -32,10 +32,10 @@ const CheckoutPage: React.FC = () => {
 
   // Removed debug logs
   
-  // Backend returns paginated response with 'results' array
+  // Backend returns paginated response with 'results' array or direct array
   const addressList = Array.isArray(addresses) 
     ? addresses 
-    : (addresses?.results || addresses?.data || []);
+    : ((addresses as any)?.results || (addresses as any)?.data || []);
   const cartData = cart;
 
   const handlePlaceOrder = async () => {
@@ -84,7 +84,7 @@ const CheckoutPage: React.FC = () => {
                   }
                 },
                 prefill: {
-                  email: cart?.user?.email || '',
+                  email: (cartData as any)?.user?.email || '',
                 },
                 theme: { color: '#2563eb' },
               };

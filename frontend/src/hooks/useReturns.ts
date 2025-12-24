@@ -20,7 +20,7 @@ export const useCreateReturn = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (data: { order_item_id: number; reason: string; description: string; images?: File[] }) => 
+    mutationFn: (data: { order_id: string; items: Array<{ order_item_id: number; quantity?: number; reason?: string }>; request_type?: string; reason: string; description: string; images?: File[]; video_url?: string }) => 
       returnAPI.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['returns'] });

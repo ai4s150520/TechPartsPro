@@ -429,23 +429,6 @@ const SellOnlinePage: React.FC = () => {
       </section>
 
       <Footer />
-
-      // <style tsx>{`
-      //   @keyframes spin-slow {
-      //     from { transform: rotate(0deg); }
-      //     to { transform: rotate(360deg); }
-      //   }
-      //   @keyframes bounce-slow {
-      //     0%, 100% { transform: translateY(0px); }
-      //     50% { transform: translateY(-20px); }
-      //   }
-      //   .animate-spin-slow {
-      //     animation: spin-slow 20s linear infinite;
-      //   }
-      //   .animate-bounce-slow {
-      //     animation: bounce-slow 6s ease-in-out infinite;
-      //   }
-      // `}</style>
     </div>
   );
 };

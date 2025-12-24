@@ -25,17 +25,57 @@ User = get_user_model()
 # --- CUSTOM LOGIN ---
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
-        data = super().validate(attrs)
-        data['user'] = {
-            'id': self.user.id,
-            'email': self.user.email,
-            'role': self.user.role,
-            'name': f"{self.user.first_name} {self.user.last_name}".strip() or self.user.email
-        }
-        return data
+        # Get email and password from request
+        email = attrs.get('email')
+        password = attrs.get('password')
+        
+        if not email or not password:
+            raise serializers.ValidationError('Email and password are required')
+        
+        # Try to authenticate user
+        try:
+            user = User.objects.get(email=email)
+            if not user.check_password(password):
+                raise serializers.ValidationError('Invalid email or password')
+            
+            if not user.is_active:
+                raise serializers.ValidationError('Account is disabled')
+            
+            # Set the user for token generation
+            self.user = user
+            
+            # Generate tokens
+            from rest_framework_simplejwt.tokens import RefreshToken
+            refresh = RefreshToken.for_user(user)
+            
+            return {
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'user': {
+                    'id': user.id,
+                    'email': user.email,
+                    'role': user.role,
+                    'name': f"{user.first_name} {user.last_name}".strip() or user.email,
+                    'is_verified': user.is_verified
+                }
+            }
+        except User.DoesNotExist:
+            raise serializers.ValidationError('Invalid email or password')
+        except Exception as e:
+            raise serializers.ValidationError(f'Login failed: {str(e)}')
 
 class CustomLoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+    
+    def post(self, request, *args, **kwargs):
+        try:
+            response = super().post(request, *args, **kwargs)
+            return response
+        except Exception as e:
+            return Response(
+                {'error': 'Login failed. Please check your credentials.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 # --- REGISTER ---
 class RegisterView(generics.CreateAPIView):

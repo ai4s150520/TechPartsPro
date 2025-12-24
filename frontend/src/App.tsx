@@ -128,7 +128,7 @@ const App = () => {
               <Route path="addresses" element={<AddressesPage />} />
               <Route path="orders" element={<OrdersPage />} />
               <Route path="orders/:id" element={<OrderDetailPage />} />
-              <Route path="orders/:orderId/track" element={<OrderTrackingPage />} />
+              <Route path="orders/:id/track" element={<OrderTrackingPage />} />
               <Route path="wallet" element={<WalletPage />} />
               <Route path="wishlist" element={<WishlistPage />} />
               <Route path="change-password" element={<ChangePasswordPage />} />

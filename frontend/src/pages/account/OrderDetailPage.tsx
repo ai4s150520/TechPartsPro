@@ -19,9 +19,13 @@ const OrderDetailPage: React.FC = () => {
   const [returnError, setReturnError] = useState<string | null>(null);
 
   useEffect(() => {
-    apiClient.get(`/orders/${id}/`)
+    if (!id) return;
+    
+    orderAPI.get(id)
       .then(res => setOrder(res.data))
-      .catch(err => console.error(err))
+      .catch(err => {
+        console.error('Order fetch error:', err);
+      })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -204,11 +208,11 @@ const OrderDetailPage: React.FC = () => {
                   <div key={item.id} className="flex justify-between items-center">
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-16 bg-gray-100 rounded border border-gray-200 overflow-hidden">
-                        {/* CHANGED: Use getImageUrl */}
                         <img 
-                          src={getImageUrl(item.product_details?.feature_image)} 
+                          src={item.product?.feature_image ? getImageUrl(item.product.feature_image) : 'https://placehold.co/64x64?text=?'} 
                           alt={item.product_name} 
                           className="w-full h-full object-contain" 
+                          onError={(e) => { e.currentTarget.src = 'https://placehold.co/64x64?text=?'; }}
                         />
                       </div>
                       <div>
@@ -232,9 +236,9 @@ const OrderDetailPage: React.FC = () => {
                 <h4 className="font-bold text-gray-900 mb-3 flex items-center"><MapPin className="w-4 h-4 mr-2" /> Shipping Address</h4>
                 <div className="text-sm text-gray-600 leading-relaxed">
                   <p className="font-medium text-gray-900">{order.shipping_address.full_name}</p>
-                  <p>{order.shipping_address.street}</p>
-                  <p>{order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.zip}</p>
-                  <p>Phone: {order.shipping_address.phone}</p>
+                  <p>{order.shipping_address.street_address}</p>
+                  <p>{order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.postal_code}</p>
+                  <p>Phone: {order.shipping_address.phone_number}</p>
                 </div>
               </div>
               <div className="space-y-2 text-sm">

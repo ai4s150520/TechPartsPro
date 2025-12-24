@@ -21,8 +21,6 @@ const ProductsPage: React.FC = () => {
   const { data, isLoading } = useProducts(filters);
   const products = data?.results || [];
   
-  // No side-effects required here; remove empty effect to avoid lint warnings
-
   const handleFilterChange = (newFilters: typeof filters) => {
     setFilters(newFilters);
     const params = new URLSearchParams();

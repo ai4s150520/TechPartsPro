@@ -53,7 +53,7 @@ const HeroCarousel: React.FC = () => {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [slides, setSlides] = useState<Slide[]>(defaultSlides);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
   const nextSlide = () => {
     setCurrent(prev => (prev === slides.length - 1 ? 0 : prev + 1));
@@ -92,9 +92,9 @@ const HeroCarousel: React.FC = () => {
   useEffect(() => {
     if (slides.length === 0 || isPaused) return;
     
-    timeoutRef.current = setTimeout(nextSlide, 5000);
+    timeoutRef.current = window.setTimeout(nextSlide, 5000);
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
     };
   }, [current, isPaused, nextSlide, slides.length]);
 

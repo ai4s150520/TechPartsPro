@@ -15,17 +15,30 @@ class OrderItemSerializer(serializers.ModelSerializer):
         """Return minimal product info with feature_image for order list"""
         if obj.product:
             from catalog.models import ProductImage
-            feature_img = ProductImage.objects.filter(product=obj.product, is_feature=True).first()
-            if not feature_img:
-                feature_img = ProductImage.objects.filter(product=obj.product).first()
-            
-            return {
-                'id': obj.product.id,
-                'name': obj.product.name,
-                'slug': obj.product.slug,
-                'feature_image': feature_img.image.url if feature_img else None
-            }
-        return None
+            try:
+                feature_img = ProductImage.objects.filter(product=obj.product, is_feature=True).first()
+                if not feature_img:
+                    feature_img = ProductImage.objects.filter(product=obj.product).first()
+                
+                return {
+                    'id': obj.product.id,
+                    'name': obj.product.name,
+                    'slug': obj.product.slug,
+                    'feature_image': feature_img.image.url if feature_img else None
+                }
+            except Exception:
+                return {
+                    'id': obj.product.id if obj.product else None,
+                    'name': obj.product_name,
+                    'slug': None,
+                    'feature_image': None
+                }
+        return {
+            'id': None,
+            'name': obj.product_name,
+            'slug': None,
+            'feature_image': None
+        }
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)

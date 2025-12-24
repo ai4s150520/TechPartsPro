@@ -41,20 +41,19 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, isSeller = false
 
     try {
       // Construct Payload based on Backend Serializer (accounts/serializers.py)
-      const payload: Record<string, unknown> = {
+      const payload = {
         email: formData.email,
         password: formData.password,
         password_confirm: formData.confirmPassword,
         first_name: formData.firstName,
         last_name: formData.lastName,
         phone_number: formData.phone,
-        role: isSeller ? 'SELLER' : 'CUSTOMER'
+        role: isSeller ? 'SELLER' : 'CUSTOMER',
+        ...(isSeller && {
+          business_name: formData.businessName,
+          gst_number: formData.gstNumber
+        })
       };
-
-      if (isSeller) {
-        payload.business_name = formData.businessName;
-        payload.gst_number = formData.gstNumber;
-      }
 
       await authService.register(payload);
       onSuccess();

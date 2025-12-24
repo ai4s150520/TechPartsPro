@@ -69,6 +69,7 @@ class SellerProfile(models.Model):
     gst_number = models.CharField(max_length=50, unique=True, blank=True, null=True)
     pan_number = models.CharField(max_length=20, blank=True, null=True)
     warehouse_address = models.TextField(blank=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
     
     # Aadhaar Verification
     _aadhaar_number = models.TextField(blank=True, null=True, db_column='aadhaar_number')
