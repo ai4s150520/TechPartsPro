@@ -66,6 +66,10 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     seller_rating = serializers.ReadOnlyField(source='seller.seller_profile.rating')
     seller_joined = serializers.ReadOnlyField(source='seller.date_joined')
     
+    # --- SEO DATA ---
+    seo_data = serializers.SerializerMethodField()
+    structured_data = serializers.SerializerMethodField()
+    
     class Meta:
         model = Product
         fields = [
@@ -76,8 +80,27 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             # Seller Info
             'seller_name', 'seller_location', 'seller_rating', 'seller_joined',
             # Context Info (The Fix)
-            'brand_name', 'category_name'
+            'brand_name', 'category_name',
+            # SEO Data
+            'seo_data', 'structured_data'
         ]
+    
+    def get_seo_data(self, obj):
+        from seo.services import SEOService
+        metadata = SEOService.get_or_create_metadata(obj)
+        return {
+            'title': metadata.title,
+            'description': metadata.description,
+            'keywords': metadata.keywords,
+            'canonical_url': metadata.canonical_url,
+            'og_title': metadata.og_title,
+            'og_description': metadata.og_description,
+            'og_image': metadata.og_image,
+        }
+    
+    def get_structured_data(self, obj):
+        from seo.services import SEOService
+        return SEOService.generate_product_structured_data(obj)
 
 class ProductCreateUpdateSerializer(serializers.ModelSerializer):
     """ Serializer for Sellers to Add/Edit products """

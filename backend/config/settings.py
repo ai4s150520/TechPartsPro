@@ -85,6 +85,7 @@ INSTALLED_APPS = [
     "analytics",
     "wallet",
     "returns",
+    "seo",
 ]
 
 MIDDLEWARE = [

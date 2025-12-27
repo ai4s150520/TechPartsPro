@@ -11,6 +11,9 @@ import ReviewList from '../../components/product/ReviewList';
 import { formatPrice } from '../../lib/formatters';
 import ImageZoom from '../../components/ui/ImageZoom';
 import Breadcrumb from '../../components/ui/Breadcrumb';
+import { MetaTags } from '../../components/SEO/MetaTags';
+import { StructuredData } from '../../components/SEO/StructuredData';
+import { Breadcrumb as SEOBreadcrumb } from '../../components/SEO/Breadcrumb';
 
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams();
@@ -112,6 +115,27 @@ const ProductDetailPage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
+      {/* SEO Components */}
+      <MetaTags 
+        seoData={product.seo_data}
+        defaultTitle={`${product.name} - Buy Online at Best Price | TechParts Pro`}
+        defaultDescription={`Buy ${product.name} online at best price. ${product.description.substring(0, 100)}... Free shipping, genuine products, easy returns.`}
+      />
+      {product.structured_data && (
+        <StructuredData data={product.structured_data} id="product-structured-data" />
+      )}
+      
+      {/* SEO Breadcrumb */}
+      <SEOBreadcrumb 
+        items={[
+          { label: 'Home', href: '/' },
+          { label: 'Shop', href: '/shop' },
+          { label: product.category_name || 'Products', href: `/shop?category=${product.category_name}` },
+          { label: product.name }
+        ]}
+        className="mb-6"
+      />
+      
       <Breadcrumb items={[
         { label: 'Shop', path: '/shop' },
         { label: product.category_name || 'Products', path: `/shop?category=${product.category_name}` },

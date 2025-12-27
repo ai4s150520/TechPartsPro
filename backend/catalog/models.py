@@ -37,6 +37,11 @@ class Category(models.Model):
     slug = models.SlugField(unique=True, blank=True)
     parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='children')
     image = models.ImageField(upload_to='categories/', blank=True, null=True)
+    
+    # SEO Fields
+    seo_title = models.CharField(max_length=60, blank=True)
+    seo_description = models.CharField(max_length=160, blank=True)
+    seo_keywords = models.CharField(max_length=255, blank=True)
 
     class Meta:
         verbose_name_plural = "Categories"
@@ -82,6 +87,11 @@ class Product(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # SEO Fields
+    seo_title = models.CharField(max_length=60, blank=True)
+    seo_description = models.CharField(max_length=160, blank=True)
+    seo_keywords = models.CharField(max_length=255, blank=True)
 
     class Meta:
         indexes = [

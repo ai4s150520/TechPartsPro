@@ -39,6 +39,7 @@ urlpatterns = [
     path("api/returns/", include("returns.urls")),
     path("api/search/", include("search.urls")),
     path("api/recommendations/", include("recommendations.urls")),
+    path("", include("seo.urls")),  # SEO URLs at root level
 ]
 
 # --- SERVE MEDIA FILES (IMAGES) IN DEVELOPMENT ---
